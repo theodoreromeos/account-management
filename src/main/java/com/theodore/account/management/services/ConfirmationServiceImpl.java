@@ -102,6 +102,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         /// //
     }
 
+    @Override
     public void organizationAdminApprovalRequest(String token) {
 
         Jws<Claims> claims = emailTokenService.parseToken(token);

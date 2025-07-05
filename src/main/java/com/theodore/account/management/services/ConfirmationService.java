@@ -6,4 +6,6 @@ public interface ConfirmationService {
 
     void confirmOrganizationUserEmail(String token);
 
+    void organizationAdminApprovalRequest(String token);
+
 }
