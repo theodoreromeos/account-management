@@ -25,7 +25,7 @@ public class ProjectSecurityConfig {
                 .csrf(csrfConfig -> csrfConfig
                         .ignoringRequestMatchers(request ->
                                 request.getMethod().equals("POST") &&
-                                        request.getRequestURI().startsWith("/register/")
+                                        request.getServletPath().startsWith("/register/")
                         )
                 )
                 .authorizeHttpRequests(authorize -> authorize
