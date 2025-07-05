@@ -21,11 +21,11 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
 
-    private final EmailTokenServiceImpl emailTokenService;
+    private final EmailTokenService emailTokenService;
     private final UserProfileRepository userProfileRepository;
     private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
 
-    public ConfirmationServiceImpl(EmailTokenServiceImpl emailTokenService, UserProfileRepository userProfileRepository,
+    public ConfirmationServiceImpl(EmailTokenService emailTokenService, UserProfileRepository userProfileRepository,
                                    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository) {
         this.emailTokenService = emailTokenService;
         this.userProfileRepository = userProfileRepository;

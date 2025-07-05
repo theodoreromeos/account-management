@@ -26,14 +26,14 @@ public class RegistrationServiceImpl implements RegistrationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationServiceImpl.class);
 
     private final OrganizationRepository organizationRepository;
-    private final EmailTokenServiceImpl emailTokenService;
+    private final EmailTokenService emailTokenService;
     private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final AuthServerClient authServerClient;
     private final UserManagementEmailMessagingService userManagementEmailMessagingService;
     private final UserProfileService userProfileService;
 
     public RegistrationServiceImpl(OrganizationRepository organizationRepository,
-                                   EmailTokenServiceImpl emailTokenService,
+                                   EmailTokenService emailTokenService,
                                    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerClient authServerClient,
                                    UserManagementEmailMessagingService userManagementEmailMessagingService,
