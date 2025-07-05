@@ -3,54 +3,18 @@ package com.theodore.account.management.services;
 import com.theodore.account.management.entities.UserProfile;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.time.Instant;
-import java.util.Date;
-
-@Service
-public class EmailTokenService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(EmailTokenService.class);
-
-    private final SecretKey key;
-    private final long validitySeconds;
-
-    public EmailTokenService(@Qualifier("emailJwtSigningKey") SecretKey emailJwtSigningKey,
-                             @Qualifier("emailTokenValiditySeconds") long emailTokenValiditySeconds) {
-        this.key = emailJwtSigningKey;
-        this.validitySeconds = emailTokenValiditySeconds;
-    }
+public interface EmailTokenService {
 
     /**
-     * Create a compact JWT containing the user ID + email, expiring in TTL.
+     * Creates a compact JWT containing the user ID + email with an expiration
      */
-    public String createToken(UserProfile user, String purpose) {
-        Instant now = Instant.now();
-        return Jwts.builder()
-                .setSubject(user.getId())
-                .claim("email", user.getEmail())
-                .claim("purpose", purpose)
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
-                .signWith(key)
-                .compact();
-    }
+    String createToken(UserProfile user, String purpose);
 
     /**
      * Parse and validate. Throws JwtException if invalid/expired.
      * Returns userId and email.
      */
-    public Jws<Claims> parseToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
-    }
+    Jws<Claims> parseToken(String token);
 
 }

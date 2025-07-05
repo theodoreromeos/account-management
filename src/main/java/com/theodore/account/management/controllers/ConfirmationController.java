@@ -30,7 +30,7 @@ public class ConfirmationController {
     @PostMapping("/organization/user")
     public ResponseEntity<String> confirmOrganizationUserEmail(@RequestParam @Valid String token) {
 
-       confirmationService.confirmOrganizationUserEmail(token);
+        confirmationService.confirmOrganizationUserEmail(token);
 
         return ResponseEntity.status(HttpStatus.OK).body("Confirmation successful");
     }
