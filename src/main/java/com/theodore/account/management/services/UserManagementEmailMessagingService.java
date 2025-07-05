@@ -4,11 +4,15 @@ import com.theodore.queue.common.authserver.CredentialsQueueEnum;
 import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
 import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.queue.common.emails.EmailQueueEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserManagementEmailMessagingService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserManagementEmailMessagingService.class);
 
     private final RabbitTemplate rabbitTemplate;
 

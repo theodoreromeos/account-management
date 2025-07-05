@@ -1,9 +1,9 @@
 package com.theodore.account.management.controllers;
 
-import com.theodore.account.management.models.RegisteredUserResponseDto;
-import com.theodore.account.management.services.RegistrationService;
 import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
+import com.theodore.account.management.models.RegisteredUserResponseDto;
+import com.theodore.account.management.services.RegistrationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 @RequestMapping("/register")
@@ -53,6 +54,5 @@ public class RegistrationController {
 //
 //        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 //    }
-
 
 }

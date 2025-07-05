@@ -5,6 +5,8 @@ import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
 import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import org.springframework.web.client.RestClient;
 
 @Service
 public class AuthServerClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthServerClient.class);
 
     private final RestClient authServerRestClient;
 

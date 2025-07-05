@@ -10,6 +10,8 @@ import com.theodore.account.management.repositories.UserProfileRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,6 +19,7 @@ import java.util.Optional;
 @Service
 public class ConfirmationService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationService.class);
 
     private final EmailTokenService emailTokenService;
     private final UserProfileRepository userProfileRepository;

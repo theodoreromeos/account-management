@@ -17,10 +17,14 @@ import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RegistrationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationService.class);
 
     private final OrganizationRepository organizationRepository;
     private final EmailTokenService emailTokenService;
@@ -46,6 +50,8 @@ public class RegistrationService {
     //removed @Transactional from here because the exception was thrown at the end so saga did not pick it
     public RegisteredUserResponseDto registerNewSimpleUser(CreateNewSimpleUserRequestDto userRequestDto) {
 
+        LOGGER.info("Registration process for simple user : {}", userRequestDto.email());
+
         if (userProfileService.UserProfileExistsByEmailAndMobileNumber(userRequestDto.email(), userRequestDto.mobileNumber())) {
             return new RegisteredUserResponseDto(userRequestDto.email(), userRequestDto.mobileNumber());
         }
@@ -64,7 +70,7 @@ public class RegistrationService {
                         },
                         () -> {
                             // Compensation: rollback to user credentials from auth-server
-                            determineRollbackCredentials(context.getAuthUserId());
+                            determineRollbackCredentials(context.getAuthUserId(), context.getSavedProfile().getEmail());
                         }
                 )
                 .step(
@@ -99,6 +105,8 @@ public class RegistrationService {
     @Transactional
     public RegisteredUserResponseDto registerNewOrganizationUser(CreateNewOrganizationUserRequestDto userRequestDto) {
 
+        LOGGER.info("Registration process for user : {} working for organization : {}", userRequestDto.email(), userRequestDto.organizationRegNumber());
+
         if (userProfileService.UserProfileExistsByEmailAndMobileNumber(userRequestDto.email(), userRequestDto.mobileNumber())) {
             return new RegisteredUserResponseDto(userRequestDto.email(), userRequestDto.mobileNumber());
         }
@@ -123,7 +131,7 @@ public class RegistrationService {
                         },
                         () -> {
                             // Compensation: rollback to user credentials from auth-server
-                            determineRollbackCredentials(context.getAuthUserId());
+                            determineRollbackCredentials(context.getAuthUserId(), context.getSavedProfile().getEmail());
                         }
                 )
                 .step(
@@ -154,7 +162,7 @@ public class RegistrationService {
                             // 4) Send to email service
                             var emailToken = emailTokenService.createToken(context.getSavedProfile(), RegistrationEmailPurpose.ORGANIZATION_USER.toString());
                             var link = String.format("%s/organization/user?token=%s", baseUrl(), emailToken);//todo
-                            System.out.println("THE LINK : " + link);
+                            LOGGER.trace("THE LINK : {}", link);//todo: remove
                         },
                         () -> {
                         }
@@ -165,8 +173,9 @@ public class RegistrationService {
         return new RegisteredUserResponseDto(context.getSavedProfile().getEmail(), context.getSavedProfile().getMobileNumber());
     }
 
-    private void determineRollbackCredentials(String userId) {
+    private void determineRollbackCredentials(String userId, String email) {
         if (userId != null) {
+            LOGGER.info("Registration process failed.Rolling back credentials from auth server for user : {} ", email);
             var rollbackEvent = new CredentialsRollbackEventDto(userId);
             userManagementEmailMessagingService.rollbackCredentialsSave(rollbackEvent);
         }
