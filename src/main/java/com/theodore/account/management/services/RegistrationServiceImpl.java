@@ -70,7 +70,12 @@ public class RegistrationServiceImpl implements RegistrationService {
                         },
                         () -> {
                             // Compensation: rollback to user credentials from auth-server
-                            determineRollbackCredentials(context.getAuthUserId(), context.getSavedProfile().getEmail());
+                            if (context.getAuthUserId() != null) {
+                                var email = context.getSavedProfile() != null ? context.getSavedProfile().getEmail() : "unknown";
+                                LOGGER.info("Simple user registration process failed. Rolling back credentials from auth server for user : {} ", email);
+                                var rollbackEvent = new CredentialsRollbackEventDto(context.getAuthUserId());
+                                userManagementEmailMessagingService.rollbackCredentialsSave(rollbackEvent);
+                            }
                         }
                 )
                 .step(
@@ -132,7 +137,11 @@ public class RegistrationServiceImpl implements RegistrationService {
                         },
                         () -> {
                             // Compensation: rollback to user credentials from auth-server
-                            determineRollbackCredentials(context.getAuthUserId(), context.getSavedProfile().getEmail());
+                            if (context.getAuthUserId() != null) {
+                                LOGGER.info("Organization user registration process failed. Rolling back credentials from auth server for user : {} ", context.getSavedProfile().getEmail());
+                                var rollbackEvent = new CredentialsRollbackEventDto(context.getAuthUserId());
+                                userManagementEmailMessagingService.rollbackCredentialsSave(rollbackEvent);
+                            }
                         }
                 )
                 .step(
@@ -172,14 +181,6 @@ public class RegistrationServiceImpl implements RegistrationService {
         sagaOrchestrator.run();
 
         return new RegisteredUserResponseDto(context.getSavedProfile().getEmail(), context.getSavedProfile().getMobileNumber());
-    }
-
-    private void determineRollbackCredentials(String userId, String email) {
-        if (userId != null) {
-            LOGGER.info("Registration process failed.Rolling back credentials from auth server for user : {} ", email);
-            var rollbackEvent = new CredentialsRollbackEventDto(userId);
-            userManagementEmailMessagingService.rollbackCredentialsSave(rollbackEvent);
-        }
     }
 
     private String baseUrl() {//todo remove it
