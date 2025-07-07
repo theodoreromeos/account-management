@@ -2,6 +2,7 @@ package com.theodore.account.management.services;
 
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
+import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,6 +48,9 @@ public class RegistrationServiceTest {
     @Mock
     private UserProfileService userProfileService;
 
+    @Spy
+    private UserProfileMapper userProfileMapper;
+
     @BeforeEach
     public void setup() {
         registrationService = new RegistrationServiceImpl(organizationRepository,
@@ -53,7 +58,8 @@ public class RegistrationServiceTest {
                 organizationUserRegistrationRequestRepository,
                 authServerClient,
                 userManagementEmailMessagingService,
-                userProfileService);
+                userProfileService,
+                userProfileMapper);
     }
 
     @Nested
@@ -128,5 +134,9 @@ public class RegistrationServiceTest {
         }
     }
 
+    @Nested
+    class RegisterNewOrganizationUser {
+        //todo
+    }
 
 }

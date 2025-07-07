@@ -4,6 +4,7 @@ import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.OrganizationUserRegistrationRequest;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
+import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.RegisteredUserResponseDto;
@@ -31,19 +32,22 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final AuthServerClient authServerClient;
     private final UserManagementEmailMessagingService userManagementEmailMessagingService;
     private final UserProfileService userProfileService;
+    private final UserProfileMapper userProfileMapper;
 
     public RegistrationServiceImpl(OrganizationRepository organizationRepository,
                                    EmailTokenService emailTokenService,
                                    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerClient authServerClient,
                                    UserManagementEmailMessagingService userManagementEmailMessagingService,
-                                   UserProfileService userProfileService) {
+                                   UserProfileService userProfileService,
+                                   UserProfileMapper userProfileMapper) {
         this.organizationRepository = organizationRepository;
         this.emailTokenService = emailTokenService;
         this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.authServerClient = authServerClient;
         this.userManagementEmailMessagingService = userManagementEmailMessagingService;
         this.userProfileService = userProfileService;
+        this.userProfileMapper = userProfileMapper;
     }
 
     //removed @Transactional from here because the exception was thrown at the end so saga did not pick it
@@ -81,10 +85,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 2) Save user profile
-                            var profile = new UserProfile(context.getAuthUserId(), userRequestDto.email(), userRequestDto.mobileNumber());
-                            profile.setName(userRequestDto.name());
-                            profile.setSurname(userRequestDto.surname());//todo : mapper
-                            context.setSavedProfile(userProfileService.saveUserProfile(profile));
+                            var newUser = userProfileMapper.simpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
+                            context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> {
                         }
@@ -147,9 +149,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 2) Save user profile
-                            var newUser = new UserProfile(context.getAuthUserId(), userRequestDto.email(), userRequestDto.mobileNumber(), organization);
-                            newUser.setName(userRequestDto.name());
-                            newUser.setSurname(userRequestDto.surname());
+                            var newUser = userProfileMapper.organizationUserDtoToUserProfile(context.getAuthUserId(), userRequestDto, organization);
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> {
