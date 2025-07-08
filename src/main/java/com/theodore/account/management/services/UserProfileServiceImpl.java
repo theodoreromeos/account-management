@@ -5,6 +5,8 @@ import com.theodore.account.management.repositories.UserProfileRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserProfileServiceImpl implements UserProfileService {
 
@@ -23,6 +25,11 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public boolean userProfileExistsByEmailAndMobileNumber(String email, String mobileNumber) {
         return userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(email, mobileNumber);
+    }
+
+    @Override
+    public Optional<UserProfile> findUserProfileById(String id) {
+        return userProfileRepository.findById(id);
     }
 
 }

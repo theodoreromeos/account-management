@@ -5,8 +5,6 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.enums.RegistrationStatus;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
-import com.theodore.account.management.repositories.UserProfileRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -22,14 +20,15 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
 
     private final EmailTokenService emailTokenService;
-    private final UserProfileRepository userProfileRepository;
-    private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
+    private final UserProfileService userProfileService;
+    private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
 
-    public ConfirmationServiceImpl(EmailTokenService emailTokenService, UserProfileRepository userProfileRepository,
-                                   OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository) {
+    public ConfirmationServiceImpl(EmailTokenService emailTokenService,
+                                   UserProfileService userProfileService,
+                                   OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService) {
         this.emailTokenService = emailTokenService;
-        this.userProfileRepository = userProfileRepository;
-        this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
+        this.userProfileService = userProfileService;
+        this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
     }
 
     @Override
@@ -42,10 +41,10 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         if (!RegistrationEmailPurpose.PERSONAL.toString().equals(purpose)) {
             throw new JwtException("Token mismatch");
         }
-        Long userId = Long.valueOf(claims.getBody().getSubject());//todo : check if having user id here is the best choice
+        String userId = claims.getBody().getSubject();//todo : check if having user id here is the best choice
         String emailInToken = claims.getBody().get("email", String.class);
 
-        UserProfile user = userProfileRepository.findById(userId)
+        UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getEmail().equals(emailInToken)) {
@@ -67,18 +66,18 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         if (!RegistrationEmailPurpose.ORGANIZATION_USER.toString().equals(purpose)) {
             throw new JwtException("Token mismatch");
         }
-        Long userId = Long.valueOf(claims.getBody().getSubject());//todo : check if having user id here is the best choice
+        String userId = claims.getBody().getSubject();//todo : check if having user id here is the best choice
         String emailInToken = claims.getBody().get("email", String.class);
 
-        UserProfile user = userProfileRepository.findById(userId)
+        UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getEmail().equals(emailInToken)) {
             throw new JwtException("Token mismatch");
         }
 
-        Optional<OrganizationUserRegistrationRequest> optionalRegistrationRequest = organizationUserRegistrationRequestRepository
-                .findByOrgUserEmail(user.getEmail());
+        Optional<OrganizationUserRegistrationRequest> optionalRegistrationRequest = organizationUserRegistrationRequestService
+                .findByOrganizationUserEmail(user.getEmail());
 
         if (optionalRegistrationRequest.isEmpty()) {
             throw new JwtException("Token mismatch");//todo: change this exception
@@ -91,7 +90,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         }
         registrationRequest.setStatus(RegistrationStatus.PENDING_COMPANY);
 
-        organizationUserRegistrationRequestRepository.save(registrationRequest);
+        organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
 
         /// //
 
@@ -110,18 +109,18 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         if (!RegistrationEmailPurpose.ORGANIZATION_ADMIN.toString().equals(purpose)) {
             throw new JwtException("Token mismatch");
         }
-        Long userId = Long.valueOf(claims.getBody().getSubject());//todo : check if having user id here is the best choice
+        String userId = claims.getBody().getSubject();//todo : check if having user id here is the best choice
         String emailInToken = claims.getBody().get("email", String.class);
 
-        UserProfile user = userProfileRepository.findById(userId)
+        UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getEmail().equals(emailInToken)) {
             throw new JwtException("Token mismatch");
         }
 
-        Optional<OrganizationUserRegistrationRequest> optionalRegistrationRequest = organizationUserRegistrationRequestRepository
-                .findByOrgUserEmail(user.getEmail());
+        Optional<OrganizationUserRegistrationRequest> optionalRegistrationRequest = organizationUserRegistrationRequestService
+                .findByOrganizationUserEmail(user.getEmail());
 
         if (optionalRegistrationRequest.isEmpty()) {
             throw new JwtException("Token mismatch");//todo: change this exception
@@ -135,7 +134,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
         registrationRequest.setStatus(RegistrationStatus.APPROVED);
 
-        organizationUserRegistrationRequestRepository.save(registrationRequest);
+        organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
 
         //send to auth server that user is authenticated
         //user.setEmailVerified(true);

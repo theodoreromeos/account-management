@@ -9,6 +9,4 @@ public interface OrganizationRepository extends CrudRepository<Organization, Lon
 
     Optional<Organization> findByRegistrationNumberIgnoreCase(String registrationNumber);
 
-    Optional<Organization> findByEmailIgnoreCase(String email);
-
 }

@@ -12,7 +12,7 @@ import org.mapstruct.factory.Mappers;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserProfileMapperTest {
-    
+
     private final UserProfileMapper userProfileMapper = Mappers.getMapper(UserProfileMapper.class);
 
     private static final String EMAIL = "test@mail.com";
