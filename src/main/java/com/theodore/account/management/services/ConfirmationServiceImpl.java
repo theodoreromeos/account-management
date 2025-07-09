@@ -22,13 +22,16 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     private final EmailTokenService emailTokenService;
     private final UserProfileService userProfileService;
     private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    private final AuthServerGrpcClient authServerGrpcClient;
 
     public ConfirmationServiceImpl(EmailTokenService emailTokenService,
                                    UserProfileService userProfileService,
-                                   OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService) {
+                                   OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
+                                   AuthServerGrpcClient authServerGrpcClient) {
         this.emailTokenService = emailTokenService;
         this.userProfileService = userProfileService;
         this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
+        this.authServerGrpcClient = authServerGrpcClient;
     }
 
     @Override
@@ -52,7 +55,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         }
 
         //send to auth server that user is authenticated
-        //user.setEmailVerified(true);
+        var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
         // send successful confirmation email
     }
 
@@ -137,7 +140,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
 
         //send to auth server that user is authenticated
-        //user.setEmailVerified(true);
+        var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
 
         // send successful confirmation email
     }

@@ -29,6 +29,8 @@
     <properties>
         <java.version>21</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <protobuf.java.util.version>3.25.4</protobuf.java.util.version>
+        <grpc.spring.boot.version>3.1.0.RELEASE</grpc.spring.boot.version>
     </properties>
     <dependencies>
 
@@ -67,6 +69,12 @@
             <artifactId>racing-model</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.theodore</groupId>
+            <artifactId>proto-common</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
         <!--	JWT	  -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -132,6 +140,25 @@
             <artifactId>mapstruct-processor</artifactId>
             <version>${mapstruct.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!--   GRPC     -->
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-client-spring-boot-starter</artifactId>
+            <version>${grpc.spring.boot.version}</version>
+        </dependency>
+        <!--  proto to json for REST -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protobuf.java.util.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-server-spring-boot-starter</artifactId>
+            <version>${grpc.spring.boot.version}</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

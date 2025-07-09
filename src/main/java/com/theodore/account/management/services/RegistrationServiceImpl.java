@@ -26,7 +26,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final OrganizationService organizationService;
     private final EmailTokenService emailTokenService;
     private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
-    private final AuthServerClient authServerClient;
+    private final AuthServerGrpcClient authServerGrpcClient;
     private final UserManagementEmailMessagingService userManagementEmailMessagingService;
     private final UserProfileService userProfileService;
     private final UserProfileMapper userProfileMapper;
@@ -34,14 +34,14 @@ public class RegistrationServiceImpl implements RegistrationService {
     public RegistrationServiceImpl(OrganizationService organizationService,
                                    EmailTokenService emailTokenService,
                                    OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
-                                   AuthServerClient authServerClient,
+                                   AuthServerGrpcClient authServerGrpcClient,
                                    UserManagementEmailMessagingService userManagementEmailMessagingService,
                                    UserProfileService userProfileService,
                                    UserProfileMapper userProfileMapper) {
         this.organizationService = organizationService;
         this.emailTokenService = emailTokenService;
         this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
-        this.authServerClient = authServerClient;
+        this.authServerGrpcClient = authServerGrpcClient;
         this.userManagementEmailMessagingService = userManagementEmailMessagingService;
         this.userProfileService = userProfileService;
         this.userProfileMapper = userProfileMapper;
@@ -64,7 +64,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 1) Create auth user
-                            var authUser = authServerClient.authServerNewSimpleUserRegistration(
+                            var authUser = authServerGrpcClient.authServerNewSimpleUserRegistration(
                                     new CreateNewSimpleAuthUserRequestDto(userRequestDto.email(), userRequestDto.mobileNumber(), userRequestDto.password())
                             );
                             context.setAuthUserId(authUser.id());
@@ -132,7 +132,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 1) Create auth user
-                            var authUser = authServerClient.authServerNewOrganizationUserRegistration(
+                            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(
                                     new CreateNewOrganizationAuthUserRequestDto(userRequestDto.email(),
                                             userRequestDto.mobileNumber(),
                                             userRequestDto.password(),
