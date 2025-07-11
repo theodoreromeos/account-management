@@ -44,7 +44,7 @@ public class RegistrationServiceTest {
     @Mock
     private OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
     @Mock
-    private AuthServerClient authServerClient;
+    private AuthServerGrpcClient authServerGrpcClient;
     @Mock
     private UserManagementEmailMessagingService userManagementEmailMessagingService;
     @Mock
@@ -58,7 +58,7 @@ public class RegistrationServiceTest {
         registrationService = new RegistrationServiceImpl(organizationService,
                 emailTokenService,
                 organizationUserRegistrationRequestService,
-                authServerClient,
+                authServerGrpcClient,
                 userManagementEmailMessagingService,
                 userProfileService,
                 userProfileMapper);
@@ -83,7 +83,7 @@ public class RegistrationServiceTest {
             assertThat(response.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
-            verifyNoInteractions(authServerClient, emailTokenService, userManagementEmailMessagingService);
+            verifyNoInteractions(authServerGrpcClient, emailTokenService, userManagementEmailMessagingService);
         }
 
         @DisplayName("registerNewSimpleUser - User is registered successfully (positive scenario)")
@@ -97,7 +97,7 @@ public class RegistrationServiceTest {
             savedProfile.setSurname(USER_SURNAME);
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
-            when(authServerClient.authServerNewSimpleUserRegistration(any())).thenReturn(AUTH_USER);
+            when(authServerGrpcClient.authServerNewSimpleUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
             when(emailTokenService.createToken(eq(savedProfile), any())).thenReturn(TOKEN);
 
@@ -107,7 +107,7 @@ public class RegistrationServiceTest {
             // then
             assertThat(response.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
-            verify(authServerClient, times(1)).authServerNewSimpleUserRegistration(any());
+            verify(authServerGrpcClient, times(1)).authServerNewSimpleUserRegistration(any());
             verify(userProfileService, times(1)).saveUserProfile(any());
             verify(emailTokenService, times(1)).createToken(savedProfile, RegistrationEmailPurpose.PERSONAL.toString());
             verify(userManagementEmailMessagingService, times(1)).sendToEmailService(any());
@@ -120,7 +120,7 @@ public class RegistrationServiceTest {
             var dto = new CreateNewSimpleUserRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME, USER_PASSWORD);
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
-            when(authServerClient.authServerNewSimpleUserRegistration(any())).thenReturn(AUTH_USER);
+            when(authServerGrpcClient.authServerNewSimpleUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
 
             // when
@@ -164,7 +164,7 @@ public class RegistrationServiceTest {
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
-            verifyNoInteractions(authServerClient, emailTokenService, userManagementEmailMessagingService);
+            verifyNoInteractions(authServerGrpcClient, emailTokenService, userManagementEmailMessagingService);
         }
 
         @DisplayName("registerNewOrganizationUser - User already exists then return dto (negative scenario)")
@@ -187,7 +187,7 @@ public class RegistrationServiceTest {
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
             verify(organizationService, times(1)).findByRegistrationNumber(any());
-            verifyNoInteractions(authServerClient, emailTokenService, userManagementEmailMessagingService);
+            verifyNoInteractions(authServerGrpcClient, emailTokenService, userManagementEmailMessagingService);
         }
 
         @DisplayName("registerNewOrganizationUser - User is registered successfully (positive scenario)")
@@ -202,7 +202,7 @@ public class RegistrationServiceTest {
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
             when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
-            when(authServerClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
+            when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
             when(emailTokenService.createToken(eq(savedProfile), any())).thenReturn(TOKEN);
 
@@ -215,7 +215,7 @@ public class RegistrationServiceTest {
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
             verify(organizationService, times(1)).findByRegistrationNumber(any());
-            verify(authServerClient, times(1)).authServerNewOrganizationUserRegistration(any());
+            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any());
             verify(userProfileService, times(1)).saveUserProfile(any());
             verify(emailTokenService, times(1)).createToken(savedProfile, RegistrationEmailPurpose.ORGANIZATION_USER.toString());
             verify(userManagementEmailMessagingService, times(1)).sendToEmailService(any());
@@ -229,7 +229,7 @@ public class RegistrationServiceTest {
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
             when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
-            when(authServerClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
+            when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
 
             // when

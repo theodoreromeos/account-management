@@ -14,7 +14,7 @@ public class AuthServerGrpcClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthServerGrpcClient.class);
 
-    @GrpcClient("auth-user-service")
+    @GrpcClient("auth-server")
     private AuthServerNewUserRegistrationGrpc.AuthServerNewUserRegistrationBlockingStub authServerClient;
 
     public AuthUserCreatedResponseDto authServerNewSimpleUserRegistration(CreateNewSimpleAuthUserRequestDto requestDto) {
