@@ -15,7 +15,7 @@ public interface UserProfileMapper {
     @Mapping(target = "mobileNumber", source = "userDto.mobileNumber")
     @Mapping(target = "name", source = "userDto.name")
     @Mapping(target = "surname", source = "userDto.surname")
-    UserProfile simpleUserDtoToUserProfile(String authUserId, CreateNewSimpleUserRequestDto userDto);
+    UserProfile createSimpleUserDtoToUserProfile(String authUserId, CreateNewSimpleUserRequestDto userDto);
 
     @Mapping(target = "id", source = "authUserId")
     @Mapping(target = "email", source = "userDto.email")
@@ -23,6 +23,6 @@ public interface UserProfileMapper {
     @Mapping(target = "name", source = "userDto.name")
     @Mapping(target = "surname", source = "userDto.surname")
     @Mapping(target = "organization", source = "organization")
-    UserProfile organizationUserDtoToUserProfile(String authUserId, CreateNewOrganizationUserRequestDto userDto, Organization organization);
+    UserProfile createOrganizationUserDtoToUserProfile(String authUserId, CreateNewOrganizationUserRequestDto userDto, Organization organization);
 
 }

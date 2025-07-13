@@ -82,7 +82,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 2) Save user profile
-                            var newUser = userProfileMapper.simpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
+                            var newUser = userProfileMapper.createSimpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> {
@@ -153,7 +153,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 2) Save user profile
-                            var newUser = userProfileMapper.organizationUserDtoToUserProfile(context.getAuthUserId(), userRequestDto, organization);
+                            var newUser = userProfileMapper.createOrganizationUserDtoToUserProfile(context.getAuthUserId(), userRequestDto, organization);
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> {

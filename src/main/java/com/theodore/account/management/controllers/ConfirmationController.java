@@ -19,7 +19,7 @@ public class ConfirmationController {
         this.confirmationService = confirmationService;
     }
 
-    @PostMapping("/simple")
+    @PostMapping("/simple/user")
     public ResponseEntity<String> confirmSimpleUserEmail(@RequestParam @Valid String token) {
 
         confirmationService.confirmSimpleUserEmail(token);

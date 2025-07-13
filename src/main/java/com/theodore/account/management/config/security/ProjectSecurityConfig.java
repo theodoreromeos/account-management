@@ -1,4 +1,4 @@
-package com.theodore.account.management.config;
+package com.theodore.account.management.config.security;
 
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

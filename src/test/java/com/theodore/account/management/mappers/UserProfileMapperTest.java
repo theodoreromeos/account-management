@@ -29,7 +29,7 @@ class UserProfileMapperTest {
     }
 
     @Nested
-    class mapSimpleUserDtoToUserProfile {
+    class MapCreateSimpleUserDtoToUserProfile {
 
         @Test
         void givenUserDtoAndId_whenMappingSimpleUserDtoToUserProfile_thenMappingSuccessful() {
@@ -37,7 +37,7 @@ class UserProfileMapperTest {
             var dto = new CreateNewSimpleUserRequestDto(EMAIL, MOBILE_NUMBER, NAME, SURNAME, PASSWORD);
 
             // when
-            UserProfile user = userProfileMapper.simpleUserDtoToUserProfile(USER_ID, dto);
+            UserProfile user = userProfileMapper.createSimpleUserDtoToUserProfile(USER_ID, dto);
 
             // then
             assertNotNull(user);
@@ -51,7 +51,7 @@ class UserProfileMapperTest {
         @Test
         void givenEmptyUserDto_whenMappingSimpleUserDtoToUserProfile_thenMappingFailure() {
             // when
-            var user = userProfileMapper.simpleUserDtoToUserProfile(USER_ID, null);
+            var user = userProfileMapper.createSimpleUserDtoToUserProfile(USER_ID, null);
 
             // then
             assertNull(user.getSurname());
@@ -64,7 +64,7 @@ class UserProfileMapperTest {
     }
 
     @Nested
-    class mapOrganizationUserDtoToUserProfile {
+    class MapCreateOrganizationUserDtoToUserProfile {
 
         private static final String ORG_NAME = "test-org-name";
         private static final Country ORG_COUNTRY = Country.GRC;
@@ -77,7 +77,7 @@ class UserProfileMapperTest {
             var dto = new CreateNewOrganizationUserRequestDto(EMAIL, MOBILE_NUMBER, NAME, SURNAME, PASSWORD, ORG_REG_NUMBER);
 
             // when
-            UserProfile user = userProfileMapper.organizationUserDtoToUserProfile(USER_ID, dto, organization);
+            UserProfile user = userProfileMapper.createOrganizationUserDtoToUserProfile(USER_ID, dto, organization);
 
             // then
             assertNotNull(user);
@@ -94,7 +94,7 @@ class UserProfileMapperTest {
             Organization organization = createMockOrganization();
 
             // when
-            var user = userProfileMapper.organizationUserDtoToUserProfile(USER_ID, null, organization);
+            var user = userProfileMapper.createOrganizationUserDtoToUserProfile(USER_ID, null, organization);
 
             // then
             assertNull(user.getSurname());
@@ -106,7 +106,7 @@ class UserProfileMapperTest {
 
         private Organization createMockOrganization() {
             Organization organization = new Organization();
-            organization.setName(NAME);
+            organization.setName(ORG_NAME);
             organization.setCountry(ORG_COUNTRY);
             organization.setRegistrationNumber(ORG_REG_NUMBER);
             return organization;
