@@ -1,7 +1,7 @@
 package com.theodore.account.management.controllers;
 
 import com.theodore.account.management.services.ConfirmationService;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ public class ConfirmationController {
     }
 
     @PostMapping("/simple/user")
-    public ResponseEntity<String> confirmSimpleUserEmail(@RequestParam @Valid String token) {
+    public ResponseEntity<String> confirmSimpleUserEmail(@RequestParam @NotBlank String token) {
 
         confirmationService.confirmSimpleUserEmail(token);
 
@@ -28,7 +28,7 @@ public class ConfirmationController {
     }
 
     @PostMapping("/organization/user")
-    public ResponseEntity<String> confirmOrganizationUserEmail(@RequestParam @Valid String token) {
+    public ResponseEntity<String> confirmOrganizationUserEmail(@RequestParam @NotBlank String token) {
 
         confirmationService.confirmOrganizationUserEmail(token);
 
@@ -36,7 +36,7 @@ public class ConfirmationController {
     }
 
     @PostMapping("/organization/admin")
-    public ResponseEntity<String> organizationAdminConfirmationOnUserEmail(@RequestParam @Valid String token) {
+    public ResponseEntity<String> organizationAdminConfirmationOnUserEmail(@RequestParam @NotBlank String token) {
 
         confirmationService.organizationAdminApprovalRequest(token);
 

@@ -26,7 +26,7 @@ public class GrpcClientAuthInterceptor  implements ClientInterceptor  {
             MethodDescriptor<ReqT, RespT> method,
             CallOptions callOptions,
             Channel next) {
-        LOGGER.warn("Fucking Intercepting grpc to auth server");
+        LOGGER.info("Intercepting grpc to auth server");
         return new ForwardingClientCall.SimpleForwardingClientCall<>(next.newCall(method, callOptions)) {
             @Override
             public void start(Listener<RespT> responseListener, Metadata headers) {
@@ -38,19 +38,17 @@ public class GrpcClientAuthInterceptor  implements ClientInterceptor  {
     }
 
     private String getAccessToken() {
-        LOGGER.warn("getAccessToken");
         OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
                 .withClientRegistrationId("mobility-api")
                 .principal("internal-client")
                 .build();
 
         OAuth2AuthorizedClient client = authorizedClientManager.authorize(authRequest);
-        LOGGER.warn("GOT TOKEN PROBABLY");
         if (client == null || client.getAccessToken() == null) {
             throw new IllegalStateException("Could not obtain access token");
         }
 
-        LOGGER.warn("GOT TOKEN DEFINITELY : {}",client.getAccessToken().getTokenValue());
+        LOGGER.trace("GOT TOKEN DEFINITELY : {}",client.getAccessToken().getTokenValue());
         return client.getAccessToken().getTokenValue();
     }
 }

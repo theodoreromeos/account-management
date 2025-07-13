@@ -24,14 +24,16 @@ public class ProjectSecurityConfig {
         http
                 .csrf(csrfConfig -> csrfConfig
                         .ignoringRequestMatchers(request ->
-                                request.getMethod().equals("POST") &&
-                                        request.getServletPath().startsWith("/register/")
+                                (request.getMethod().equals("POST") &&
+                                        request.getServletPath().startsWith("/register/"))
+                                        ||
+                                        (request.getMethod().equals("POST") &&
+                                                request.getServletPath().startsWith("/confirmation/"))
                         )
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        // allow anyone to POST to /register/**
                         .requestMatchers(HttpMethod.POST, "/register/**").permitAll()
-                        // allow Swagger UI and OpenAPI (v3) endpoints
+                        .requestMatchers(HttpMethod.POST, "/confirmation/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
                         // any other request requires authentication
                         .anyRequest().authenticated()

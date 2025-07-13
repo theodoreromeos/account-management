@@ -5,6 +5,7 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.enums.RegistrationStatus;
 import com.theodore.racingmodel.exceptions.NotFoundException;
+import com.theodore.user.ConfirmationStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -18,6 +19,10 @@ import java.util.Optional;
 public class ConfirmationServiceImpl implements ConfirmationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
+
+    private static final  String PURPOSE = "purpose";
+    private static final  String EMAIL = "email";
+
 
     private final EmailTokenService emailTokenService;
     private final UserProfileService userProfileService;
@@ -37,15 +42,13 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     @Override
     public void confirmSimpleUserEmail(String token) {
 
-        LOGGER.trace("confirmSimpleUserEmail -  token: {}", token);
-
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get("purpose", String.class);
+        String purpose = claims.getBody().get(PURPOSE, String.class);
         if (!RegistrationEmailPurpose.PERSONAL.toString().equals(purpose)) {
             throw new JwtException("Token mismatch");
         }
-        String userId = claims.getBody().getSubject();//todo : check if having user id here is the best choice
-        String emailInToken = claims.getBody().get("email", String.class);
+        String userId = claims.getBody().getSubject();
+        String emailInToken = claims.getBody().get(EMAIL, String.class);
 
         UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -56,6 +59,9 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
         //send to auth server that user is authenticated
         var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
+        if(!response.getConfirmationStatus().equals(ConfirmationStatus.CONFIRMED)){
+            throw new RuntimeException("confirmation failed");//todo: better exception
+        }
         // send successful confirmation email
     }
 
@@ -65,12 +71,12 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         LOGGER.trace("confirmOrganizationUserEmail -  token: {}", token);
 
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get("purpose", String.class);
+        String purpose = claims.getBody().get(PURPOSE, String.class);
         if (!RegistrationEmailPurpose.ORGANIZATION_USER.toString().equals(purpose)) {
             throw new JwtException("Token mismatch");
         }
-        String userId = claims.getBody().getSubject();//todo : check if having user id here is the best choice
-        String emailInToken = claims.getBody().get("email", String.class);
+        String userId = claims.getBody().getSubject();
+        String emailInToken = claims.getBody().get(EMAIL, String.class);
 
         UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -108,12 +114,12 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     public void organizationAdminApprovalRequest(String token) {
 
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get("purpose", String.class);
+        String purpose = claims.getBody().get(PURPOSE, String.class);
         if (!RegistrationEmailPurpose.ORGANIZATION_ADMIN.toString().equals(purpose)) {
             throw new JwtException("Token mismatch");
         }
-        String userId = claims.getBody().getSubject();//todo : check if having user id here is the best choice
-        String emailInToken = claims.getBody().get("email", String.class);
+        String userId = claims.getBody().getSubject();
+        String emailInToken = claims.getBody().get(EMAIL, String.class);
 
         UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
