@@ -2,6 +2,7 @@ package com.theodore.account.management.services;
 
 import com.theodore.account.management.models.AuthUserManageAccountRequestDto;
 import com.theodore.account.management.models.UserChangeInformationRequestDto;
+import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
@@ -16,10 +17,10 @@ public class AuthServerGrpcClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthServerGrpcClient.class);
 
-    @GrpcClient("auth-server-registration")
+    @GrpcClient("auth-server")
     private AuthServerNewUserRegistrationGrpc.AuthServerNewUserRegistrationBlockingStub authServerRegistrationClient;
 
-    @GrpcClient("auth-server-account-management")
+    @GrpcClient("auth-server")
     private AuthServerAccountManagementGrpc.AuthServerAccountManagementBlockingStub authServerAccountManagementClient;
 
     public AuthUserCreatedResponseDto authServerNewSimpleUserRegistration(CreateNewSimpleAuthUserRequestDto requestDto) {
@@ -37,14 +38,17 @@ public class AuthServerGrpcClient {
         return new AuthUserCreatedResponseDto(newUserCreated.getUserId());
     }
 
-    public AuthUserCreatedResponseDto authServerNewOrganizationUserRegistration(CreateNewOrganizationAuthUserRequestDto requestDto) {
+    public AuthUserCreatedResponseDto authServerNewOrganizationUserRegistration(CreateNewOrganizationAuthUserRequestDto requestDto,
+                                                                                RoleType role) {
         LOGGER.info("Sending request via grpc to auth server to register an organization user's credentials");
         var grpcRequest = CreateNewOrganizationAuthUserRequest.newBuilder()
                 .setEmail(requestDto.email())
                 .setMobileNumber(requestDto.mobileNumber())
                 .setPassword(requestDto.password())
                 .setOrganizationRegNumber(requestDto.organizationRegNumber())
+                .setRole(role.getScopeValue())
                 .build();
+
 
         var newUserCreated = this.authServerRegistrationClient.createOrganizationUser(grpcRequest);
 

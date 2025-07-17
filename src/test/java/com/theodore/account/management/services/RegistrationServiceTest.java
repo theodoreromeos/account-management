@@ -206,7 +206,7 @@ public class RegistrationServiceTest {
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
             when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
-            when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
+            when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
             when(emailTokenService.createOrganizationUserToken(eq(savedProfile), any())).thenReturn(TOKEN);
 
@@ -219,7 +219,7 @@ public class RegistrationServiceTest {
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
             verify(organizationService, times(1)).findByRegistrationNumber(any());
-            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any());
+            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
             verify(userProfileService, times(1)).saveUserProfile(any());
             verify(emailTokenService, times(1)).createOrganizationUserToken(savedProfile, RegistrationEmailPurpose.ORGANIZATION_USER.toString());
             verify(messagingService, times(1)).sendToEmailService(any());
@@ -233,7 +233,7 @@ public class RegistrationServiceTest {
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
             when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
-            when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
+            when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
 
             // when

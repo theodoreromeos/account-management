@@ -4,7 +4,6 @@ import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.entities.specifications.OrganizationRegistrationProcessSpecification;
-import com.theodore.account.management.enums.OrganizationRegistrationDecision;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.models.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.RegistrationProcessResponseDto;
@@ -12,8 +11,10 @@ import com.theodore.account.management.models.SearchRegistrationProcessRequestDt
 import com.theodore.account.management.models.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
+import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -23,7 +24,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -90,6 +90,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     }
 
     @Override
+    @Transactional
     public void organizationRegistrationDecision(OrganizationRegistrationDecisionRequestDto requestDto) {//todo: saga patern is needed
 
         OrganizationRegistrationProcess registrationProcess = organizationRegistrationProcessRepository.findById(requestDto.id())
@@ -102,13 +103,13 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         if (OrganizationRegistrationStatus.APPROVED.equals(savedRegistrationProcess.getAdminApprovedStatus())) {
             Organization organization = saveOrganization(savedRegistrationProcess);
             String password = SecurePasswordGenerator.generatePlaceholderPassword();
+
+            var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(savedRegistrationProcess.getOrgAdminEmail(),
+                    savedRegistrationProcess.getOrgAdminPhone(),
+                    password,
+                    organization.getRegistrationNumber());
             //send to auth server and get id
-            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(
-                    new CreateNewOrganizationAuthUserRequestDto(savedRegistrationProcess.getOrgAdminEmail(),
-                            savedRegistrationProcess.getOrgAdminPhone(),
-                            password,
-                            organization.getRegistrationNumber())
-            );
+            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(orgAuthUserRequest, RoleType.ORGANIZATION_ADMIN);
 
             saveUserProfile(savedRegistrationProcess, organization, authUser.id());
 

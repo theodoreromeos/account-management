@@ -8,6 +8,7 @@ import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.*;
 import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
 import com.theodore.queue.common.emails.EmailDto;
+import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
@@ -133,11 +134,12 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 1) Create auth user
+                            var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(userRequestDto.email(),
+                                    userRequestDto.mobileNumber(),
+                                    userRequestDto.password(),
+                                    organization.getRegistrationNumber());
                             var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(
-                                    new CreateNewOrganizationAuthUserRequestDto(userRequestDto.email(),
-                                            userRequestDto.mobileNumber(),
-                                            userRequestDto.password(),
-                                            organization.getRegistrationNumber())
+                                    orgAuthUserRequest, RoleType.SIMPLE_USER
                             );
                             context.setAuthUserId(authUser.id());
                         },
