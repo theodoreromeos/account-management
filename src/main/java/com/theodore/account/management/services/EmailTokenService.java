@@ -7,9 +7,15 @@ import io.jsonwebtoken.Jws;
 public interface EmailTokenService {
 
     /**
-     * Creates a compact JWT containing the user ID + email with an expiration
+     * Creates a compact JWT containing the simple user ID + email with an expiration
      */
-    String createToken(UserProfile user, String purpose);
+    String createSimpleUserToken(UserProfile user, String purpose);
+
+    /**
+     * Creates a compact JWT containing the organization user ID + email + organization registration number
+     * with an expiration
+     */
+    String createOrganizationUserToken(UserProfile user, String purpose);
 
     /**
      * Parse and validate. Throws JwtException if invalid/expired.

@@ -32,4 +32,9 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.findById(id);
     }
 
+    @Override
+    public Optional<UserProfile> findByEmail(String email) {
+        return userProfileRepository.findByEmail(email);
+    }
+
 }

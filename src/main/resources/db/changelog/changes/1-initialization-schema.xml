@@ -24,9 +24,7 @@
                 id                  VARCHAR(26) PRIMARY KEY,
                 name                VARCHAR(255) NOT NULL,
                 registration_number VARCHAR(255) NOT NULL,
-                email               VARCHAR(255) NOT NULL,
                 country             VARCHAR(255),
-                emergency_phone     VARCHAR(255),
                 date_created        TIMESTAMPTZ  NOT NULL,
                 date_updated        TIMESTAMPTZ  NOT NULL,
                 CONSTRAINT registration_number_key UNIQUE (registration_number)
@@ -58,6 +56,22 @@
                 status        VARCHAR(255) NOT NULL,
                 date_created  TIMESTAMPTZ  NOT NULL,
                 date_updated  TIMESTAMPTZ  NOT NULL
+            );
+
+            -- 5. ORGANIZATION_REGISTRATION_PROCESS
+            CREATE TABLE organization_registration_process
+            (
+                id                  BIGSERIAL PRIMARY KEY,
+                organization_name   VARCHAR(255) NOT NULL,
+                registration_number VARCHAR(255) NOT NULL,
+                country             VARCHAR(3)   NOT NULL,
+                org_admin_email     VARCHAR(255) NOT NULL,
+                org_admin_phone     VARCHAR(255) NOT NULL,
+                org_admin_name      VARCHAR(255) NOT NULL,
+                org_admin_surname   VARCHAR(255) NOT NULL,
+                admin_approved      VARCHAR(100) NOT NULL,
+                date_created        TIMESTAMPTZ  NOT NULL,
+                date_updated        TIMESTAMPTZ  NOT NULL
             );
 
         </sql>

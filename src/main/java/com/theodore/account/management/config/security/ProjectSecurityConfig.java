@@ -29,11 +29,15 @@ public class ProjectSecurityConfig {
                                         ||
                                         (request.getMethod().equals("POST") &&
                                                 request.getServletPath().startsWith("/confirmation/"))
+                                        ||
+                                        (request.getMethod().equals("POST") &&
+                                                request.getServletPath().startsWith("/admin/"))
                         )
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/register/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/confirmation/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/admin/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
                         // any other request requires authentication
                         .anyRequest().authenticated()

@@ -1,5 +1,7 @@
 package com.theodore.account.management.services;
 
+import com.theodore.account.management.models.AuthUserManageAccountRequestDto;
+import com.theodore.account.management.models.UserChangeInformationRequestDto;
 import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
@@ -14,8 +16,11 @@ public class AuthServerGrpcClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthServerGrpcClient.class);
 
-    @GrpcClient("auth-server")
-    private AuthServerNewUserRegistrationGrpc.AuthServerNewUserRegistrationBlockingStub authServerClient;
+    @GrpcClient("auth-server-registration")
+    private AuthServerNewUserRegistrationGrpc.AuthServerNewUserRegistrationBlockingStub authServerRegistrationClient;
+
+    @GrpcClient("auth-server-account-management")
+    private AuthServerAccountManagementGrpc.AuthServerAccountManagementBlockingStub authServerAccountManagementClient;
 
     public AuthUserCreatedResponseDto authServerNewSimpleUserRegistration(CreateNewSimpleAuthUserRequestDto requestDto) {
         LOGGER.info("Sending request via grpc to auth server to register a new simple user's credentials");
@@ -25,7 +30,7 @@ public class AuthServerGrpcClient {
                 .setPassword(requestDto.password())
                 .build();
 
-        var newUserCreated = this.authServerClient.createSimpleUser(grpcRequest);
+        var newUserCreated = this.authServerRegistrationClient.createSimpleUser(grpcRequest);
 
         LOGGER.info("Auth server responded with user's id : {}", newUserCreated.getUserId());
 
@@ -41,7 +46,7 @@ public class AuthServerGrpcClient {
                 .setOrganizationRegNumber(requestDto.organizationRegNumber())
                 .build();
 
-        var newUserCreated = this.authServerClient.createOrganizationUser(grpcRequest);
+        var newUserCreated = this.authServerRegistrationClient.createOrganizationUser(grpcRequest);
 
         LOGGER.info("Auth server responded with user's id : {}", newUserCreated.getUserId());
 
@@ -50,7 +55,22 @@ public class AuthServerGrpcClient {
 
     public UserConfirmationResponse authServerNewUserConfirmation(String userId) {
         var request = ConfirmUserAccountRequest.newBuilder().setUserId(userId).build();
-        return authServerClient.confirmUserAccount(request);
+        return authServerRegistrationClient.confirmUserAccount(request);
+    }
+
+    public AuthUserCreatedResponseDto manageAuthServerUserAccount(AuthUserManageAccountRequestDto requestDto) {
+        LOGGER.info("Sending request to manage auth server user's : {} details", requestDto.oldEmail());
+        var grpcRequest = ManageAuthUserAccountRequest.newBuilder()
+                .setOldEmail(requestDto.oldEmail())
+                .setNewEmail(requestDto.newEmail())
+                .setMobileNumber(requestDto.phoneNumber())
+                .setOldPassword(requestDto.oldPassword())
+                .setNewPassword(requestDto.newPassword())
+                .build();
+
+        var authUser = this.authServerAccountManagementClient.manageUserAccount(grpcRequest);
+
+        return new AuthUserCreatedResponseDto(authUser.getUserId());
     }
 
 }

@@ -22,16 +22,9 @@ public class Organization extends AuditableUpdateEntity {
     @Column(name = "registration_number", nullable = false)
     private String registrationNumber;
 
-    @Column(name = "email", nullable = false)
-    private String email;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "country")
     private Country country;
-
-    @Column(name = "emergency_phone")
-    @Basic
-    private String emergencyPhone;
 
     public Organization() {
     }
@@ -60,14 +53,6 @@ public class Organization extends AuditableUpdateEntity {
         this.registrationNumber = registrationNumber;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public Country getCountry() {
         return country;
     }
@@ -76,11 +61,4 @@ public class Organization extends AuditableUpdateEntity {
         this.country = country;
     }
 
-    public String getEmergencyPhone() {
-        return emergencyPhone;
-    }
-
-    public void setEmergencyPhone(String emergencyPhone) {
-        this.emergencyPhone = emergencyPhone;
-    }
 }

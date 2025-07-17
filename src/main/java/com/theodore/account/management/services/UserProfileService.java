@@ -12,4 +12,6 @@ public interface UserProfileService {
 
     Optional<UserProfile> findUserProfileById(String id);
 
+    Optional<UserProfile> findByEmail(String email);
+
 }

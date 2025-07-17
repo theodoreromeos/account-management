@@ -9,4 +9,6 @@ public interface OrganizationRepository extends CrudRepository<Organization, Lon
 
     Optional<Organization> findByRegistrationNumberIgnoreCase(String registrationNumber);
 
+    boolean existsByRegistrationNumberIgnoreCase(String registrationNumber);
+
 }

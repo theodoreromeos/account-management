@@ -1,13 +1,11 @@
 package com.theodore.account.management.services;
 
 import com.theodore.account.management.entities.Organization;
+import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.OrganizationUserRegistrationRequest;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.mappers.UserProfileMapper;
-import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
-import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
-import com.theodore.account.management.models.RegisteredUserResponseDto;
-import com.theodore.account.management.models.UserProfileRegistrationContext;
+import com.theodore.account.management.models.*;
 import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
 import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.exceptions.NotFoundException;
@@ -27,24 +25,27 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final EmailTokenService emailTokenService;
     private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
     private final AuthServerGrpcClient authServerGrpcClient;
-    private final UserManagementEmailMessagingService userManagementEmailMessagingService;
+    private final MessagingService messagingService;
     private final UserProfileService userProfileService;
     private final UserProfileMapper userProfileMapper;
+    private final OrganizationRegistrationProcessService organizationRegistrationProcessService;
 
     public RegistrationServiceImpl(OrganizationService organizationService,
                                    EmailTokenService emailTokenService,
                                    OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
                                    AuthServerGrpcClient authServerGrpcClient,
-                                   UserManagementEmailMessagingService userManagementEmailMessagingService,
+                                   MessagingService messagingService,
                                    UserProfileService userProfileService,
-                                   UserProfileMapper userProfileMapper) {
+                                   UserProfileMapper userProfileMapper,
+                                   OrganizationRegistrationProcessService organizationRegistrationProcessService) {
         this.organizationService = organizationService;
         this.emailTokenService = emailTokenService;
         this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
         this.authServerGrpcClient = authServerGrpcClient;
-        this.userManagementEmailMessagingService = userManagementEmailMessagingService;
+        this.messagingService = messagingService;
         this.userProfileService = userProfileService;
         this.userProfileMapper = userProfileMapper;
+        this.organizationRegistrationProcessService = organizationRegistrationProcessService;
     }
 
     //removed @Transactional from here because the exception was thrown at the end so saga did not pick it
@@ -75,7 +76,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                 var email = context.getSavedProfile() != null ? context.getSavedProfile().getEmail() : "unknown";
                                 LOGGER.info("Simple user registration process failed. Rolling back credentials from auth server for user : {} ", email);
                                 var rollbackEvent = new CredentialsRollbackEventDto(context.getAuthUserId());
-                                userManagementEmailMessagingService.rollbackCredentialsSave(rollbackEvent);
+                                messagingService.rollbackCredentialsSave(rollbackEvent);
                             }
                         }
                 )
@@ -91,10 +92,10 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 3) Send email
-                            var token = emailTokenService.createToken(context.getSavedProfile(), RegistrationEmailPurpose.PERSONAL.toString());
+                            var token = emailTokenService.createSimpleUserToken(context.getSavedProfile(), RegistrationEmailPurpose.PERSONAL.toString());
                             var link = String.format("%s/simple?token=%s", baseUrl(), token);
-                            var email = new EmailDto(context.getSavedProfile().getEmail(), "User Registration Confirmation", link);
-                            userManagementEmailMessagingService.sendToEmailService(email);
+                            var confirmationEmail = new EmailDto(context.getSavedProfile().getEmail(), "User Registration Confirmation", link);
+                            messagingService.sendToEmailService(confirmationEmail);
                             LOGGER.trace("THE LINK : {}", link);//todo: remove
                         },
                         () -> {
@@ -146,7 +147,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                 String email = context.getSavedProfile() != null ? context.getSavedProfile().getEmail() : "unknown";
                                 LOGGER.info("Organization user registration process failed. Rolling back credentials from auth server for user : {} ", email);
                                 var rollbackEvent = new CredentialsRollbackEventDto(context.getAuthUserId());
-                                userManagementEmailMessagingService.rollbackCredentialsSave(rollbackEvent);
+                                messagingService.rollbackCredentialsSave(rollbackEvent);
                             }
                         }
                 )
@@ -163,7 +164,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                         () -> {
                             // 3) Save the registration request
                             OrganizationUserRegistrationRequest registrationRequest = new OrganizationUserRegistrationRequest();
-                            registrationRequest.setCompanyEmail(organization.getEmail());
+                            //registrationRequest.setCompanyEmail(organization.getEmail());//todo
                             registrationRequest.setOrgUserEmail(context.getSavedProfile().getEmail());
 
                             organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
@@ -174,10 +175,10 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 4) Send to email service
-                            var emailToken = emailTokenService.createToken(context.getSavedProfile(), RegistrationEmailPurpose.ORGANIZATION_USER.toString());
+                            var emailToken = emailTokenService.createOrganizationUserToken(context.getSavedProfile(), RegistrationEmailPurpose.ORGANIZATION_USER.toString());
                             var link = String.format("%s/organization/user?token=%s", baseUrl(), emailToken);//todo
-                            var email = new EmailDto(context.getSavedProfile().getEmail(), "User Registration Confirmation", link);
-                            userManagementEmailMessagingService.sendToEmailService(email);
+                            var confirmationEmail = new EmailDto(context.getSavedProfile().getEmail(), "User Registration Confirmation", link);
+                            messagingService.sendToEmailService(confirmationEmail);
                             LOGGER.trace("THE LINK : {}", link);//todo: remove
                         },
                         () -> {
@@ -187,6 +188,31 @@ public class RegistrationServiceImpl implements RegistrationService {
         sagaOrchestrator.run();
 
         return new RegisteredUserResponseDto(context.getSavedProfile().getEmail(), context.getSavedProfile().getMobileNumber());
+    }
+
+    @Override
+    public RegisteredOrganizationResponseDto registerNewOrganizationEntity(CreateNewOrganizationEntityRequestDto newOrganizationRequestDto) {
+        LOGGER.info("Registration process for new organization : {}", newOrganizationRequestDto.organizationName());
+
+        var response = new RegisteredOrganizationResponseDto(newOrganizationRequestDto.organizationName(), newOrganizationRequestDto.registrationNumber());
+
+        if (organizationService.existsByRegistrationNumber(newOrganizationRequestDto.registrationNumber())) {
+            // returns the dto normally so that no organization registration number can be guessed
+            return response;
+        }
+        OrganizationRegistrationProcess orgRegistrationProcess = new OrganizationRegistrationProcess();//todo : mapper
+        orgRegistrationProcess.setCountry(newOrganizationRequestDto.country());
+        orgRegistrationProcess.setRegistrationNumber(newOrganizationRequestDto.registrationNumber());
+        orgRegistrationProcess.setOrganizationName(newOrganizationRequestDto.organizationName());
+        if (newOrganizationRequestDto.organizationAdmin() != null) {
+            orgRegistrationProcess.setOrgAdminEmail(newOrganizationRequestDto.organizationAdmin().email());
+            orgRegistrationProcess.setOrgAdminName(newOrganizationRequestDto.organizationAdmin().name());
+            orgRegistrationProcess.setOrgAdminSurname(newOrganizationRequestDto.organizationAdmin().surname());
+            orgRegistrationProcess.setOrgAdminPhone(newOrganizationRequestDto.organizationAdmin().mobileNumber());
+        }
+        organizationRegistrationProcessService.saveOrganizationRegistrationProcess(orgRegistrationProcess);
+        // organization registration request successful
+        return response;
     }
 
     private String baseUrl() {//todo remove it

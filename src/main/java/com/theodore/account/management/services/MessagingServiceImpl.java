@@ -10,18 +10,18 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserManagementEmailMessagingServiceImpl implements UserManagementEmailMessagingService {
+public class MessagingServiceImpl implements MessagingService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserManagementEmailMessagingServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessagingServiceImpl.class);
 
     private final RabbitTemplate rabbitTemplate;
 
-    public UserManagementEmailMessagingServiceImpl(RabbitTemplate rabbitTemplate) {
+    public MessagingServiceImpl(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
-    public void sendToEmailService(EmailDto dto) {
+    public void sendToEmailService(EmailDto... dto) {
         rabbitTemplate.convertAndSend(
                 EmailQueueEnum.QUEUE_EXCHANGE.getValue(),
                 EmailQueueEnum.QUEUE_ROUTING_KEY.getValue(),

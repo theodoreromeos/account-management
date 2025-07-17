@@ -1,8 +1,6 @@
 package com.theodore.account.management.controllers;
 
-import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
-import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
-import com.theodore.account.management.models.RegisteredUserResponseDto;
+import com.theodore.account.management.models.*;
 import com.theodore.account.management.services.RegistrationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -39,20 +37,12 @@ public class RegistrationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-//    @PostMapping("/manufacturer")
-//    public ResponseEntity<RegisteredUserResponseDto> registerNewManufacturer(@RequestBody @Valid CreateNewOrganizationUserRequestDto userRequestDto) {
-//
-//        RegisteredUserResponseDto responseDto = registrationService.registerNewOrganizationUser(userRequestDto);//todo
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-//    }
-//
-//    @PostMapping("/insurance-company")
-//    public ResponseEntity<RegisteredUserResponseDto> registerNewInsuranceCompany(@RequestBody @Valid CreateNewOrganizationUserRequestDto userRequestDto) {
-//
-//        RegisteredUserResponseDto responseDto = registrationService.registerNewOrganizationUser(userRequestDto);//todo
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-//    }
+    @PostMapping("/organization")
+    public ResponseEntity<RegisteredOrganizationResponseDto> registerNewOrganization(@RequestBody @Valid CreateNewOrganizationEntityRequestDto newOrganizationRequestDto) {
+
+        RegisteredOrganizationResponseDto responseDto = registrationService.registerNewOrganizationEntity(newOrganizationRequestDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+    }
 
 }

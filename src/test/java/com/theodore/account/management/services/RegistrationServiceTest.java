@@ -46,9 +46,12 @@ public class RegistrationServiceTest {
     @Mock
     private AuthServerGrpcClient authServerGrpcClient;
     @Mock
-    private UserManagementEmailMessagingService userManagementEmailMessagingService;
+    private MessagingService messagingService;
     @Mock
     private UserProfileService userProfileService;
+    @Mock
+    private OrganizationRegistrationProcessService organizationRegistrationProcessService;
+
 
     @Spy
     private UserProfileMapper userProfileMapper;
@@ -59,9 +62,10 @@ public class RegistrationServiceTest {
                 emailTokenService,
                 organizationUserRegistrationRequestService,
                 authServerGrpcClient,
-                userManagementEmailMessagingService,
+                messagingService,
                 userProfileService,
-                userProfileMapper);
+                userProfileMapper,
+                organizationRegistrationProcessService);
     }
 
     @Nested
@@ -83,7 +87,7 @@ public class RegistrationServiceTest {
             assertThat(response.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
-            verifyNoInteractions(authServerGrpcClient, emailTokenService, userManagementEmailMessagingService);
+            verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
         @DisplayName("registerNewSimpleUser - User is registered successfully (positive scenario)")
@@ -99,7 +103,7 @@ public class RegistrationServiceTest {
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
             when(authServerGrpcClient.authServerNewSimpleUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
-            when(emailTokenService.createToken(eq(savedProfile), any())).thenReturn(TOKEN);
+            when(emailTokenService.createSimpleUserToken(eq(savedProfile), any())).thenReturn(TOKEN);
 
             // when
             var response = registrationService.registerNewSimpleUser(dto);
@@ -109,8 +113,8 @@ public class RegistrationServiceTest {
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(authServerGrpcClient, times(1)).authServerNewSimpleUserRegistration(any());
             verify(userProfileService, times(1)).saveUserProfile(any());
-            verify(emailTokenService, times(1)).createToken(savedProfile, RegistrationEmailPurpose.PERSONAL.toString());
-            verify(userManagementEmailMessagingService, times(1)).sendToEmailService(any());
+            verify(emailTokenService, times(1)).createSimpleUserToken(savedProfile, RegistrationEmailPurpose.PERSONAL.toString());
+            verify(messagingService, times(1)).sendToEmailService(any());
         }
 
         @DisplayName("registerNewSimpleUser - User is not saved successfully and a compensation is triggered (negative scenario)")
@@ -129,7 +133,7 @@ public class RegistrationServiceTest {
 
             // then
             ArgumentCaptor<CredentialsRollbackEventDto> rollbackCaptor = ArgumentCaptor.forClass(CredentialsRollbackEventDto.class);
-            verify(userManagementEmailMessagingService).rollbackCredentialsSave(rollbackCaptor.capture());
+            verify(messagingService).rollbackCredentialsSave(rollbackCaptor.capture());
 
             assertThat(rollbackCaptor.getValue().userId()).isEqualTo(USER_ID);
         }
@@ -164,7 +168,7 @@ public class RegistrationServiceTest {
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
-            verifyNoInteractions(authServerGrpcClient, emailTokenService, userManagementEmailMessagingService);
+            verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
         @DisplayName("registerNewOrganizationUser - User already exists then return dto (negative scenario)")
@@ -187,7 +191,7 @@ public class RegistrationServiceTest {
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
             verify(organizationService, times(1)).findByRegistrationNumber(any());
-            verifyNoInteractions(authServerGrpcClient, emailTokenService, userManagementEmailMessagingService);
+            verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
         @DisplayName("registerNewOrganizationUser - User is registered successfully (positive scenario)")
@@ -204,7 +208,7 @@ public class RegistrationServiceTest {
             when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
-            when(emailTokenService.createToken(eq(savedProfile), any())).thenReturn(TOKEN);
+            when(emailTokenService.createOrganizationUserToken(eq(savedProfile), any())).thenReturn(TOKEN);
 
             // when
             var result = registrationService.registerNewOrganizationUser(dto);
@@ -217,8 +221,8 @@ public class RegistrationServiceTest {
             verify(organizationService, times(1)).findByRegistrationNumber(any());
             verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any());
             verify(userProfileService, times(1)).saveUserProfile(any());
-            verify(emailTokenService, times(1)).createToken(savedProfile, RegistrationEmailPurpose.ORGANIZATION_USER.toString());
-            verify(userManagementEmailMessagingService, times(1)).sendToEmailService(any());
+            verify(emailTokenService, times(1)).createOrganizationUserToken(savedProfile, RegistrationEmailPurpose.ORGANIZATION_USER.toString());
+            verify(messagingService, times(1)).sendToEmailService(any());
         }
 
         @DisplayName("registerNewOrganizationUser - User is not saved successfully and a compensation is triggered (negative scenario)")
@@ -237,7 +241,7 @@ public class RegistrationServiceTest {
 
             // then
             ArgumentCaptor<CredentialsRollbackEventDto> rollbackCaptor = ArgumentCaptor.forClass(CredentialsRollbackEventDto.class);
-            verify(userManagementEmailMessagingService).rollbackCredentialsSave(rollbackCaptor.capture());
+            verify(messagingService).rollbackCredentialsSave(rollbackCaptor.capture());
 
             assertThat(rollbackCaptor.getValue().userId()).isEqualTo(USER_ID);
         }

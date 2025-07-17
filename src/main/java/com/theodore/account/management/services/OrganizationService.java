@@ -6,4 +6,8 @@ public interface OrganizationService {
 
     Organization findByRegistrationNumber(String registrationNumber);
 
+    boolean existsByRegistrationNumber(String registrationNumber);
+
+    Organization saveOrganization(Organization organization);
+
 }

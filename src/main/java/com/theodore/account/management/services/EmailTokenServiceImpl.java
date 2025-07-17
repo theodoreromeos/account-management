@@ -28,12 +28,28 @@ public class EmailTokenServiceImpl implements EmailTokenService {
     }
 
     @Override
-    public String createToken(UserProfile user, String purpose) {
+    public String createSimpleUserToken(UserProfile user, String purpose) {
         LOGGER.info("Creating token for user {} with purpose {}", user.getEmail(), purpose);
         Instant now = Instant.now();
         return Jwts.builder()
                 .setSubject(user.getId())
                 .claim("email", user.getEmail())
+                .claim("purpose", purpose)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
+                .signWith(key)
+                .compact();
+    }
+
+    @Override
+    public String createOrganizationUserToken(UserProfile user, String purpose) {
+        LOGGER.info("Creating organization user token for user {} with purpose {}", user.getEmail(), purpose);
+        Instant now = Instant.now();
+        String orgRegNumber = user.getOrganization() != null ? user.getOrganization().getRegistrationNumber() : "";
+        return Jwts.builder()
+                .setSubject(user.getId())
+                .claim("email", user.getEmail())
+                .claim("organization", orgRegNumber)
                 .claim("purpose", purpose)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(validitySeconds)))

@@ -20,4 +20,14 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orElseThrow(() -> new NotFoundException("Organization not found"));
     }
 
+    @Override
+    public boolean existsByRegistrationNumber(String registrationNumber) {
+        return organizationRepository.existsByRegistrationNumberIgnoreCase(registrationNumber);
+    }
+
+    @Override
+    public Organization saveOrganization(Organization organization) {
+        return organizationRepository.save(organization);
+    }
+
 }
