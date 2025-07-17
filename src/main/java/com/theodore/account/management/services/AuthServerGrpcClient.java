@@ -1,7 +1,6 @@
 package com.theodore.account.management.services;
 
 import com.theodore.account.management.models.AuthUserManageAccountRequestDto;
-import com.theodore.account.management.models.UserChangeInformationRequestDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @GrpcGlobalClientInterceptor
-public class GrpcClientAuthInterceptor  implements ClientInterceptor  {
+public class GrpcClientAuthInterceptor implements ClientInterceptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GrpcClientAuthInterceptor.class);
 
@@ -48,7 +48,7 @@ public class GrpcClientAuthInterceptor  implements ClientInterceptor  {
             throw new IllegalStateException("Could not obtain access token");
         }
 
-        LOGGER.trace("GOT TOKEN DEFINITELY : {}",client.getAccessToken().getTokenValue());
+        LOGGER.trace("GOT TOKEN DEFINITELY : {}", client.getAccessToken().getTokenValue());
         return client.getAccessToken().getTokenValue();
     }
 }
