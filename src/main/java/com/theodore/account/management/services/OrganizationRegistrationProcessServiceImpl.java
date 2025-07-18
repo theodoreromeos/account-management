@@ -8,10 +8,10 @@ import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.mappers.OrganizationMapper;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
-import com.theodore.account.management.models.OrganizationRegistrationDecisionRequestDto;
-import com.theodore.account.management.models.RegistrationProcessResponseDto;
-import com.theodore.account.management.models.SearchRegistrationProcessRequestDto;
-import com.theodore.account.management.models.SearchResponse;
+import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
+import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
+import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
+import com.theodore.account.management.models.dto.responses.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
@@ -86,7 +86,6 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         response.setLast(filteredResults.isLast());
 
         return response;
-
     }
 
     @Override

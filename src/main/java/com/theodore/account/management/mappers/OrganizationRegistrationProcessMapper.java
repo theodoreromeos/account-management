@@ -1,8 +1,8 @@
 package com.theodore.account.management.mappers;
 
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
-import com.theodore.account.management.models.CreateNewOrganizationEntityRequestDto;
-import com.theodore.account.management.models.RegistrationProcessResponseDto;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
+import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;

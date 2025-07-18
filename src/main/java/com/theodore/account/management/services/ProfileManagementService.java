@@ -1,7 +1,6 @@
 package com.theodore.account.management.services;
 
-import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
-import com.theodore.account.management.models.UserChangeInformationRequestDto;
+import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 
 public interface ProfileManagementService {
 

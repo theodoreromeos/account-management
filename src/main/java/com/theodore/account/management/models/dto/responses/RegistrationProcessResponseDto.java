@@ -1,4 +1,4 @@
-package com.theodore.account.management.models;
+package com.theodore.account.management.models.dto.responses;
 
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.racingmodel.enums.Country;

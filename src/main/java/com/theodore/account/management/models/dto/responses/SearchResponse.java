@@ -1,4 +1,4 @@
-package com.theodore.account.management.models;
+package com.theodore.account.management.models.dto.responses;
 
 import java.util.List;
 

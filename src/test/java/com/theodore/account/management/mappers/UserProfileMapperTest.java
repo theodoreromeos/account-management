@@ -2,8 +2,8 @@ package com.theodore.account.management.mappers;
 
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
-import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
-import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.racingmodel.enums.Country;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

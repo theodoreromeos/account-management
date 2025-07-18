@@ -2,8 +2,8 @@ package com.theodore.account.management.services;
 
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.mappers.UserProfileMapper;
-import com.theodore.account.management.models.AuthUserManageAccountRequestDto;
-import com.theodore.account.management.models.UserChangeInformationRequestDto;
+import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
+import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +29,7 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     public void adminProfileManagement(UserChangeInformationRequestDto requestDto) {
 
         Optional<UserProfile> optionalUserProfile = userProfileService.findByEmail(requestDto.getOldEmail());
-        
+
         if (optionalUserProfile.isPresent()) {
             UserProfile userProfile = userProfileMapper.mapUserProfileChangesToEntity(requestDto, optionalUserProfile.get());
             userProfileService.saveUserProfile(userProfile);

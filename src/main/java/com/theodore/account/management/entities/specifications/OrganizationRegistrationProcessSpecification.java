@@ -2,7 +2,7 @@ package com.theodore.account.management.entities.specifications;
 
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
-import com.theodore.account.management.models.SearchRegistrationProcessRequestDto;
+import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import jakarta.persistence.criteria.Predicate;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.jpa.domain.Specification;

@@ -1,4 +1,4 @@
-package com.theodore.account.management.models;
+package com.theodore.account.management.models.dto.requests;
 
 import com.theodore.racingmodel.utils.StrongPasswordValidator;
 import jakarta.validation.constraints.NotBlank;

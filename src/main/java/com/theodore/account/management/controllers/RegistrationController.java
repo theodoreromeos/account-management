@@ -1,6 +1,10 @@
 package com.theodore.account.management.controllers;
 
-import com.theodore.account.management.models.*;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
+import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
+import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
 import com.theodore.account.management.services.RegistrationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
