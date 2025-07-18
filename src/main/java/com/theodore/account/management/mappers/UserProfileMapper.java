@@ -5,8 +5,10 @@ import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
+import com.theodore.account.management.models.UserChangeInformationRequestDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring",
@@ -51,5 +53,18 @@ public interface UserProfileMapper {
     UserProfile orgRegistrationProcessToUserProfile(OrganizationRegistrationProcess registrationProcess,
                                                     Organization organization,
                                                     String userAuthId);
+
+
+    @Mapping(target = "dateCreated", ignore = true)
+    @Mapping(target = "dateUpdated", ignore = true)
+    @Mapping(target = "address", ignore = true)
+    @Mapping(target = "birthDate", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "mobileNumber", source = "userDetailsChangeRequest.phoneNumber")
+    @Mapping(target = "name", source = "userDetailsChangeRequest.name")
+    @Mapping(target = "surname", source = "userDetailsChangeRequest.surname")
+    @Mapping(target = "email", source = "userDetailsChangeRequest.newEmail")
+    UserProfile mapUserProfileChangesToEntity(UserChangeInformationRequestDto userDetailsChangeRequest,
+                                              @MappingTarget UserProfile userProfile);
 
 }

@@ -29,13 +29,9 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     public void adminProfileManagement(UserChangeInformationRequestDto requestDto) {
 
         Optional<UserProfile> optionalUserProfile = userProfileService.findByEmail(requestDto.getOldEmail());
-
-        if (optionalUserProfile.isPresent()) {//todo mapper
-            UserProfile userProfile = optionalUserProfile.get();
-            userProfile.setName(requestDto.getName());
-            userProfile.setSurname(requestDto.getSurname());
-            userProfile.setEmail(requestDto.getNewEmail());
-            userProfile.setMobileNumber(requestDto.getPhoneNumber());
+        
+        if (optionalUserProfile.isPresent()) {
+            UserProfile userProfile = userProfileMapper.mapUserProfileChangesToEntity(requestDto, optionalUserProfile.get());
             userProfileService.saveUserProfile(userProfile);
         } else {
             var authUser = authServerGrpcClient.manageAuthServerUserAccount(
@@ -45,12 +41,8 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
                             requestDto.getOldPassword(),
                             requestDto.getNewPassword()
                     ));
-            UserProfile userProfile = new UserProfile();
+            UserProfile userProfile = userProfileMapper.mapUserProfileChangesToEntity(requestDto, new UserProfile());
             userProfile.setId(authUser.id());
-            userProfile.setName(requestDto.getName());
-            userProfile.setSurname(requestDto.getSurname());
-            userProfile.setEmail(requestDto.getNewEmail());
-            userProfile.setMobileNumber(requestDto.getPhoneNumber());
             userProfileService.saveUserProfile(userProfile);
         }
 
