@@ -15,7 +15,6 @@ public class OrganizationRegistrationProcessSpecification {
     private static final String STATUS = "adminApprovedStatus";
 
     private OrganizationRegistrationProcessSpecification() {
-
     }
 
     public static Specification<OrganizationRegistrationProcess> filterCriteria(SearchRegistrationProcessRequestDto searchRequest) {
@@ -40,10 +39,11 @@ public class OrganizationRegistrationProcessSpecification {
                 case REJECTED:
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get(STATUS), OrganizationRegistrationStatus.REJECTED)));
                     break;
-                default:
             }
-            criteriaQuery.distinct(true);
-            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            if (criteriaQuery != null) {
+                criteriaQuery.distinct(true);
+            }
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
     }
 
