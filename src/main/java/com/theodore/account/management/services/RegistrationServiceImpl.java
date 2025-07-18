@@ -4,6 +4,7 @@ import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.OrganizationUserRegistrationRequest;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
+import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.*;
 import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
@@ -30,6 +31,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final UserProfileService userProfileService;
     private final UserProfileMapper userProfileMapper;
     private final OrganizationRegistrationProcessService organizationRegistrationProcessService;
+    private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
 
     public RegistrationServiceImpl(OrganizationService organizationService,
                                    EmailTokenService emailTokenService,
@@ -38,7 +40,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                                    MessagingService messagingService,
                                    UserProfileService userProfileService,
                                    UserProfileMapper userProfileMapper,
-                                   OrganizationRegistrationProcessService organizationRegistrationProcessService) {
+                                   OrganizationRegistrationProcessService organizationRegistrationProcessService,
+                                   OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper) {
         this.organizationService = organizationService;
         this.emailTokenService = emailTokenService;
         this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
@@ -47,6 +50,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         this.userProfileService = userProfileService;
         this.userProfileMapper = userProfileMapper;
         this.organizationRegistrationProcessService = organizationRegistrationProcessService;
+        this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
     }
 
     //removed @Transactional from here because the exception was thrown at the end so saga did not pick it
@@ -202,16 +206,9 @@ public class RegistrationServiceImpl implements RegistrationService {
             // returns the dto normally so that no organization registration number can be guessed
             return response;
         }
-        OrganizationRegistrationProcess orgRegistrationProcess = new OrganizationRegistrationProcess();//todo : mapper
-        orgRegistrationProcess.setCountry(newOrganizationRequestDto.country());
-        orgRegistrationProcess.setRegistrationNumber(newOrganizationRequestDto.registrationNumber());
-        orgRegistrationProcess.setOrganizationName(newOrganizationRequestDto.organizationName());
-        if (newOrganizationRequestDto.organizationAdmin() != null) {
-            orgRegistrationProcess.setOrgAdminEmail(newOrganizationRequestDto.organizationAdmin().email());
-            orgRegistrationProcess.setOrgAdminName(newOrganizationRequestDto.organizationAdmin().name());
-            orgRegistrationProcess.setOrgAdminSurname(newOrganizationRequestDto.organizationAdmin().surname());
-            orgRegistrationProcess.setOrgAdminPhone(newOrganizationRequestDto.organizationAdmin().mobileNumber());
-        }
+        OrganizationRegistrationProcess orgRegistrationProcess = organizationRegistrationProcessMapper
+                .mapRequestDtoToEntity(newOrganizationRequestDto);
+
         organizationRegistrationProcessService.saveOrganizationRegistrationProcess(orgRegistrationProcess);
         // organization registration request successful
         return response;

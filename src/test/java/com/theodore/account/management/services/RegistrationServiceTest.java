@@ -3,6 +3,7 @@ package com.theodore.account.management.services;
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
+import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.CreateNewSimpleUserRequestDto;
@@ -52,9 +53,10 @@ public class RegistrationServiceTest {
     @Mock
     private OrganizationRegistrationProcessService organizationRegistrationProcessService;
 
-
     @Spy
     private UserProfileMapper userProfileMapper;
+    @Spy
+    private OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
 
     @BeforeEach
     public void setup() {
@@ -65,7 +67,8 @@ public class RegistrationServiceTest {
                 messagingService,
                 userProfileService,
                 userProfileMapper,
-                organizationRegistrationProcessService);
+                organizationRegistrationProcessService,
+                organizationRegistrationProcessMapper);
     }
 
     @Nested
