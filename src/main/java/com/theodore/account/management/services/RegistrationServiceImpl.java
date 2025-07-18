@@ -212,7 +212,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             return response;
         }
         OrganizationRegistrationProcess orgRegistrationProcess = organizationRegistrationProcessMapper
-                .mapRequestDtoToEntity(newOrganizationRequestDto);
+                .requestDtoToEntity(newOrganizationRequestDto);
 
         organizationRegistrationProcessService.saveOrganizationRegistrationProcess(orgRegistrationProcess);
         // organization registration request successful

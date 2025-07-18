@@ -72,7 +72,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                 OrganizationRegistrationProcessSpecification.filterCriteria(searchRequest), pageable);
 
         List<RegistrationProcessResponseDto> results = filteredResults.stream()
-                .map(organizationRegistrationProcessMapper::mapEntityToResponseDto)
+                .map(organizationRegistrationProcessMapper::entityToResponseDto)
                 .toList();
 
         SearchResponse<RegistrationProcessResponseDto> response = new SearchResponse<>();

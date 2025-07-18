@@ -20,7 +20,7 @@ public interface OrganizationRegistrationProcessMapper {
     @Mapping(target = "orgAdminSurname", source = "organizationRegProcess.orgAdminSurname")
     @Mapping(target = "orgAdminEmail", source = "organizationRegProcess.orgAdminEmail")
     @Mapping(target = "orgAdminPhone", source = "organizationRegProcess.orgAdminPhone")
-    RegistrationProcessResponseDto mapEntityToResponseDto(OrganizationRegistrationProcess organizationRegProcess);
+    RegistrationProcessResponseDto entityToResponseDto(OrganizationRegistrationProcess organizationRegProcess);
 
 
     @Mapping(target = "country", source = "newOrganizationRequestDto.country")
@@ -34,7 +34,7 @@ public interface OrganizationRegistrationProcessMapper {
     @Mapping(target = "dateCreated", ignore = true)
     @Mapping(target = "dateUpdated", ignore = true)
     @Mapping(target = "id", ignore = true)
-    OrganizationRegistrationProcess mapRequestDtoToEntity(CreateNewOrganizationEntityRequestDto newOrganizationRequestDto);
+    OrganizationRegistrationProcess requestDtoToEntity(CreateNewOrganizationEntityRequestDto newOrganizationRequestDto);
 
 
 }

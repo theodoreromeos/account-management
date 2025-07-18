@@ -34,10 +34,10 @@ class UserProfileMapperTest {
         @Test
         void givenUserDtoAndId_whenMappingSimpleUserDtoToUserProfile_thenMappingSuccessful() {
             // given
-            var dto = new CreateNewSimpleUserRequestDto(EMAIL, MOBILE_NUMBER, NAME, SURNAME, PASSWORD);
+            var source = new CreateNewSimpleUserRequestDto(EMAIL, MOBILE_NUMBER, NAME, SURNAME, PASSWORD);
 
             // when
-            UserProfile user = userProfileMapper.createSimpleUserDtoToUserProfile(USER_ID, dto);
+            UserProfile user = userProfileMapper.createSimpleUserDtoToUserProfile(USER_ID, source);
 
             // then
             assertNotNull(user);
