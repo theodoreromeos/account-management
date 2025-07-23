@@ -5,17 +5,20 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
-import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
+import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
+import com.theodore.racingmodel.entities.modeltypes.OrganizationType;
+import com.theodore.racingmodel.enums.Country;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class RegistrationServiceTest {
+class RegistrationServiceTest {
 
     private static final String TOKEN = "test-token";
     private static final String USER_ID = "test-user-id";
@@ -34,9 +37,11 @@ public class RegistrationServiceTest {
     private static final String USER_PASSWORD = "test-password";
     private static final String USER_NAME = "test_name";
     private static final String USER_SURNAME = "test_surname";
-    private AuthUserCreatedResponseDto AUTH_USER = new AuthUserCreatedResponseDto(USER_ID);
+    private static final AuthUserCreatedResponseDto AUTH_USER = new AuthUserCreatedResponseDto(USER_ID);
+    private static final String ORG_REG_NUMBER = "test-registration-number";
 
-    private RegistrationService registrationService;
+    @InjectMocks
+    private RegistrationServiceImpl registrationService;
 
     @Mock
     private OrganizationService organizationService;
@@ -52,29 +57,18 @@ public class RegistrationServiceTest {
     private UserProfileService userProfileService;
     @Mock
     private OrganizationRegistrationProcessService organizationRegistrationProcessService;
+    @Mock
+    private SagaCompensationActionService sagaCompensationActionService;
 
     @Spy
     private UserProfileMapper userProfileMapper;
     @Spy
     private OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
 
-    @BeforeEach
-    public void setup() {
-        registrationService = new RegistrationServiceImpl(organizationService,
-                emailTokenService,
-                organizationUserRegistrationRequestService,
-                authServerGrpcClient,
-                messagingService,
-                userProfileService,
-                userProfileMapper,
-                organizationRegistrationProcessService,
-                organizationRegistrationProcessMapper);
-    }
-
     @Nested
     class RegisterNewSimpleUser {
 
-        @DisplayName("registerNewSimpleUser - User already exists (negative scenario)")
+        @DisplayName("registerNewSimpleUser: User already exists (negative scenario)")
         @Test
         void givenAlreadyExistingUser_whenRegisteringNewSimpleUser_thenReturnDtoWithoutDoingAnythingElse() {
             // given
@@ -93,7 +87,7 @@ public class RegistrationServiceTest {
             verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
-        @DisplayName("registerNewSimpleUser - User is registered successfully (positive scenario)")
+        @DisplayName("registerNewSimpleUser: User is registered successfully (positive scenario)")
         @Test
         void givenCorrectUserData_whenRegisteringNewSimpleUser_thenReturnDto() {
             // given
@@ -120,7 +114,7 @@ public class RegistrationServiceTest {
             verify(messagingService, times(1)).sendToEmailService(any());
         }
 
-        @DisplayName("registerNewSimpleUser - User is not saved successfully and a compensation is triggered (negative scenario)")
+        @DisplayName("registerNewSimpleUser: User is not saved successfully and a compensation is triggered (negative scenario)")
         @Test
         void givenCorrectUserData_whenRegisteringNewSimpleUser_thenTriggerCompensationIfSavingProfileFails() {
             // given
@@ -135,26 +129,19 @@ public class RegistrationServiceTest {
                     .isInstanceOf(RuntimeException.class);
 
             // then
-            ArgumentCaptor<CredentialsRollbackEventDto> rollbackCaptor = ArgumentCaptor.forClass(CredentialsRollbackEventDto.class);
-            verify(messagingService).rollbackCredentialsSave(rollbackCaptor.capture());
+            ArgumentCaptor<String> authUserIdCaptor = ArgumentCaptor.forClass(String.class);
+            verify(sagaCompensationActionService).authServerCredentialsRollback(authUserIdCaptor.capture(), any(), any());
 
-            assertThat(rollbackCaptor.getValue().userId()).isEqualTo(USER_ID);
+            assertThat(authUserIdCaptor.getValue()).isEqualTo(USER_ID);
         }
     }
 
     @Nested
     class RegisterNewOrganizationUser {
 
-        private static final String ORG_REG_NUMBER = "test-registration-number";
+        private final Organization ORGANIZATION = createMockOrganization();
 
-        private Organization ORGANIZATION;
-
-        @BeforeEach
-        public void newOrganizationUserTestSetup() {
-            ORGANIZATION = createMockOrganization();
-        }
-
-        @DisplayName("registerNewOrganizationUser - User already exists then return dto (negative scenario)")
+        @DisplayName("registerNewOrganizationUser: User already exists then return dto (negative scenario)")
         @Test
         void givenAlreadyExistingUser_whenRegisteringNewOrganizationUser_thenReturnDtoWithoutDoingAnythingElse() {
             // given
@@ -174,7 +161,7 @@ public class RegistrationServiceTest {
             verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
-        @DisplayName("registerNewOrganizationUser - User already exists then return dto (negative scenario)")
+        @DisplayName("registerNewOrganizationUser: User already exists then return dto (negative scenario)")
         @Test
         void givenOrganizationDoesNotExist_whenRegisteringNewOrganizationUser_thenReturnDtoWithoutDoingAnythingElse() {
             // given
@@ -197,7 +184,7 @@ public class RegistrationServiceTest {
             verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
-        @DisplayName("registerNewOrganizationUser - User is registered successfully (positive scenario)")
+        @DisplayName("registerNewOrganizationUser: User is registered successfully (positive scenario)")
         @Test
         void givenCorrectUserData_whenRegisteringNewOrganizationUser_thenReturnDto() {
             // given
@@ -228,7 +215,7 @@ public class RegistrationServiceTest {
             verify(messagingService, times(1)).sendToEmailService(any());
         }
 
-        @DisplayName("registerNewOrganizationUser - User is not saved successfully and a compensation is triggered (negative scenario)")
+        @DisplayName("registerNewOrganizationUser: User is not saved successfully and a compensation is triggered (negative scenario)")
         @Test
         void givenCorrectUserData_whenRegisteringNewOrganizationUser_thenTriggerCompensationIfSavingProfileFails() {
             // given
@@ -243,10 +230,10 @@ public class RegistrationServiceTest {
             assertThatThrownBy(() -> registrationService.registerNewOrganizationUser(dto)).isInstanceOf(RuntimeException.class);
 
             // then
-            ArgumentCaptor<CredentialsRollbackEventDto> rollbackCaptor = ArgumentCaptor.forClass(CredentialsRollbackEventDto.class);
-            verify(messagingService).rollbackCredentialsSave(rollbackCaptor.capture());
+            ArgumentCaptor<String> authUserIdCaptor = ArgumentCaptor.forClass(String.class);
+            verify(sagaCompensationActionService).authServerCredentialsRollback(authUserIdCaptor.capture(), any(), any());
 
-            assertThat(rollbackCaptor.getValue().userId()).isEqualTo(USER_ID);
+            assertThat(authUserIdCaptor.getValue()).isEqualTo(USER_ID);
         }
 
         private Organization createMockOrganization() {
@@ -254,6 +241,57 @@ public class RegistrationServiceTest {
             organization.setRegistrationNumber(ORG_REG_NUMBER);
             organization.setId("test-org-id");
             return organization;
+        }
+
+    }
+
+    @Nested
+    class RegisterNewOrganizationEntity {
+
+        private static final String ORG_NAME = "test-org-name";
+        private static final Country ORG_COUNTRY = Country.GRC;
+        private static final OrganizationType ORG_TYPE = OrganizationType.MANUFACTURER;
+
+        @DisplayName("registerNewOrganizationEntity: Registers organization when registration number is not taken (positive scenario)")
+        @Test
+        void givenAvailableRegNumber_whenRegisteringNewOrganization_thenNewOrganizationRequestIsSaved() {
+            // given
+            var adminReqDto = new CreateOrganizationAdminRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME);
+            var newOrganizationRequestDto = new CreateNewOrganizationEntityRequestDto(
+                    adminReqDto, ORG_NAME, ORG_REG_NUMBER, ORG_COUNTRY, ORG_TYPE);
+            when(organizationService.existsByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(false);
+
+            // when
+            var result = registrationService.registerNewOrganizationEntity(newOrganizationRequestDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.organizationName()).isEqualTo(ORG_NAME);
+            assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
+
+            verify(organizationService, times(1)).existsByRegistrationNumber(ORG_REG_NUMBER);
+            verify(organizationRegistrationProcessService, times(1)).saveOrganizationRegistrationProcess(any());
+        }
+
+        @DisplayName("registerNewOrganizationEntity: Skips registration when registration number already exists (negative scenario)")
+        @Test
+        void givenTakenRegNumber_whenRegisteringNewOrganization_thenNewOrganizationRequestIsNotSaved() {
+            // given
+            var adminReqDto = new CreateOrganizationAdminRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME);
+            var newOrganizationRequestDto = new CreateNewOrganizationEntityRequestDto(
+                    adminReqDto, ORG_NAME, ORG_REG_NUMBER, ORG_COUNTRY, ORG_TYPE);
+            when(organizationService.existsByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(true);
+
+            // when
+            var result = registrationService.registerNewOrganizationEntity(newOrganizationRequestDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.organizationName()).isEqualTo(ORG_NAME);
+            assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
+
+            verify(organizationService, times(1)).existsByRegistrationNumber(ORG_REG_NUMBER);
+            verify(organizationRegistrationProcessService, times(0)).saveOrganizationRegistrationProcess(any());
         }
 
     }

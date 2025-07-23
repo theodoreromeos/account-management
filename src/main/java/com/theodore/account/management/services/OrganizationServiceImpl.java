@@ -30,4 +30,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         return organizationRepository.save(organization);
     }
 
+    @Override
+    public void deleteOrganization(Organization organization){
+        organizationRepository.delete(organization);
+    }
+
 }

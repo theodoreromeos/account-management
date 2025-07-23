@@ -8,6 +8,7 @@ import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.mappers.OrganizationMapper;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
+import com.theodore.account.management.models.NewOrganizationRegistrationContext;
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
@@ -17,7 +18,7 @@ import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
-import jakarta.transaction.Transactional;
+import com.theodore.racingmodel.saga.SagaOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -40,6 +41,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
     private final UserProfileMapper userProfileMapper;
     private final OrganizationMapper organizationMapper;
+    private final SagaCompensationActionService sagaCompensationActionService;
 
     public OrganizationRegistrationProcessServiceImpl(OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                                       OrganizationService organizationService,
@@ -47,7 +49,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                                                       AuthServerGrpcClient authServerGrpcClient,
                                                       OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                                       UserProfileMapper userProfileMapper,
-                                                      OrganizationMapper organizationMapper) {
+                                                      OrganizationMapper organizationMapper,
+                                                      SagaCompensationActionService sagaCompensationActionService) {
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationService = organizationService;
         this.userProfileService = userProfileService;
@@ -55,6 +58,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
         this.userProfileMapper = userProfileMapper;
         this.organizationMapper = organizationMapper;
+        this.sagaCompensationActionService = sagaCompensationActionService;
     }
 
     @Override
@@ -89,38 +93,80 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     }
 
     @Override
-    @Transactional
-    public void organizationRegistrationDecision(OrganizationRegistrationDecisionRequestDto requestDto) {//todo: saga patern is needed
+    public void organizationRegistrationDecision(OrganizationRegistrationDecisionRequestDto requestDto) {
 
         LOGGER.info("Decision {} for organization registration process with id {}", requestDto.decision(), requestDto.id());
 
         OrganizationRegistrationProcess registrationProcess = organizationRegistrationProcessRepository.findById(requestDto.id())
                 .orElseThrow(() -> new NotFoundException("OrganizationRegistrationProcess not found"));
 
-        registrationProcess.setAdminApprovedStatus(OrganizationRegistrationStatus.decisionToStatus(requestDto.decision()));
+        OrganizationRegistrationStatus decisionStatus = OrganizationRegistrationStatus.decisionToStatus(requestDto.decision());
 
-        OrganizationRegistrationProcess savedRegistrationProcess = organizationRegistrationProcessRepository.save(registrationProcess);
+        registrationProcess.setAdminApprovedStatus(decisionStatus);
 
-        if (OrganizationRegistrationStatus.APPROVED.equals(savedRegistrationProcess.getAdminApprovedStatus())) {
-            Organization organization = saveOrganization(savedRegistrationProcess);
-            String password = SecurePasswordGenerator.generatePlaceholderPassword();
-
-            var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(savedRegistrationProcess.getOrgAdminEmail(),
-                    savedRegistrationProcess.getOrgAdminPhone(),
-                    password,
-                    organization.getRegistrationNumber());
-            //send to auth server and get id
-            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(orgAuthUserRequest, RoleType.ORGANIZATION_ADMIN);
-
-            saveUserProfile(savedRegistrationProcess, organization, authUser.id());
-
+        if (OrganizationRegistrationStatus.REJECTED.equals(decisionStatus)) {
+            organizationRegistrationProcessRepository.save(registrationProcess);
+            return;
         }
 
+        String orgAdminEmail = registrationProcess.getOrgAdminEmail() != null ? registrationProcess.getOrgAdminEmail() : "unknown";
+
+        var context = new NewOrganizationRegistrationContext();
+        var sagaOrchestrator = new SagaOrchestrator();
+
+        sagaOrchestrator
+                .step(
+                        () -> {
+                            var savedRegistrationProcess = organizationRegistrationProcessRepository.save(registrationProcess);
+                            context.setRegistrationProcess(savedRegistrationProcess);
+                            context.setTempPassword(SecurePasswordGenerator.generatePlaceholderPassword());
+                        },
+                        () -> organizationRegistrationProcessRepository.delete(context.getRegistrationProcess())
+                )
+                .step(
+                        () -> {
+                            Organization organization = saveOrganization(context.getRegistrationProcess());
+                            context.setOrganization(organization);
+                        },
+                        () -> organizationService.deleteOrganization(context.getOrganization())
+                )
+                .step(
+                        () -> {
+                            var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(context.getRegistrationProcess().getOrgAdminEmail(),
+                                    context.getRegistrationProcess().getOrgAdminPhone(),
+                                    context.getTempPassword(),
+                                    context.getOrganization().getRegistrationNumber());
+                            //send to auth server and get id
+                            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(orgAuthUserRequest, RoleType.ORGANIZATION_ADMIN);
+                            context.setAuthUserId(authUser.id());
+                        },
+                        () -> {
+                            if (context.getAuthUserId() != null) {
+                                String logMsg = "Organization user registration";
+                                sagaCompensationActionService.authServerCredentialsRollback(context.getAuthUserId(),
+                                        orgAdminEmail,
+                                        logMsg);
+                            }
+                        }
+                )
+                .step(
+                        () -> {
+                            var newUser = saveUserProfile(context.getRegistrationProcess(),
+                                    context.getOrganization(),
+                                    context.getAuthUserId()
+                            );
+                            context.setSavedProfile(newUser);
+                        },
+                        () -> {
+                        }
+                );
+
+        sagaOrchestrator.run();
     }
 
-    private void saveUserProfile(OrganizationRegistrationProcess registrationProcess, Organization organization, String userAuthId) {
+    private UserProfile saveUserProfile(OrganizationRegistrationProcess registrationProcess, Organization organization, String userAuthId) {
         UserProfile userProfile = userProfileMapper.orgRegistrationProcessToUserProfile(registrationProcess, organization, userAuthId);
-        userProfileService.saveUserProfile(userProfile);
+        return userProfileService.saveUserProfile(userProfile);
     }
 
     private Organization saveOrganization(OrganizationRegistrationProcess registrationProcess) {

@@ -22,12 +22,6 @@ class UserProfileMapperTest {
     private static final String PASSWORD = "test_password";
     private static final String USER_ID = "user-id";
 
-
-    @Test
-    void contextLoads() {
-        assertNotNull(userProfileMapper);
-    }
-
     @Nested
     class MapCreateSimpleUserDtoToUserProfile {
 

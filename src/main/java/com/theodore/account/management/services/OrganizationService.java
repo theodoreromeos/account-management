@@ -10,4 +10,6 @@ public interface OrganizationService {
 
     Organization saveOrganization(Organization organization);
 
+    void deleteOrganization(Organization organization);
+
 }
