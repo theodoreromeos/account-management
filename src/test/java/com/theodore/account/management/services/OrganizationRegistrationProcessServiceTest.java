@@ -12,7 +12,7 @@ import com.theodore.account.management.models.dto.requests.OrganizationRegistrat
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.racingmodel.enums.Country;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
+import com.theodore.account.management.models.dto.responses.AuthUserCreatedResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

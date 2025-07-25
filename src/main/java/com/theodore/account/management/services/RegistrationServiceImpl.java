@@ -15,8 +15,8 @@ import com.theodore.account.management.models.dto.responses.RegisteredUserRespon
 import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
-import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationAuthUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUserRequestDto;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

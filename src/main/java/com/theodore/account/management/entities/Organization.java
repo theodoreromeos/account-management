@@ -26,9 +26,6 @@ public class Organization extends AuditableUpdateEntity {
     @Column(name = "country")
     private Country country;
 
-    public Organization() {
-    }
-
     public String getId() {
         return id;
     }

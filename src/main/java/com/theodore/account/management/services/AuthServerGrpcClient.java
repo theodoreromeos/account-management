@@ -2,9 +2,9 @@ package com.theodore.account.management.services;
 
 import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
-import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
-import com.theodore.racingmodel.models.CreateNewOrganizationAuthUserRequestDto;
-import com.theodore.racingmodel.models.CreateNewSimpleAuthUserRequestDto;
+import com.theodore.account.management.models.dto.responses.AuthUserCreatedResponseDto;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationAuthUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUserRequestDto;
 import com.theodore.user.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.slf4j.Logger;

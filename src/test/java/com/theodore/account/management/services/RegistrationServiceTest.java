@@ -9,10 +9,9 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
-import com.theodore.racingmodel.entities.modeltypes.OrganizationType;
 import com.theodore.racingmodel.enums.Country;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.racingmodel.models.AuthUserCreatedResponseDto;
+import com.theodore.account.management.models.dto.responses.AuthUserCreatedResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -250,7 +249,7 @@ class RegistrationServiceTest {
 
         private static final String ORG_NAME = "test-org-name";
         private static final Country ORG_COUNTRY = Country.GRC;
-        private static final OrganizationType ORG_TYPE = OrganizationType.MANUFACTURER;
+        private static final CreateNewOrganizationEntityRequestDto.OrganizationType ORG_TYPE = CreateNewOrganizationEntityRequestDto.OrganizationType.MANUFACTURER;
 
         @DisplayName("registerNewOrganizationEntity: Registers organization when registration number is not taken (positive scenario)")
         @Test

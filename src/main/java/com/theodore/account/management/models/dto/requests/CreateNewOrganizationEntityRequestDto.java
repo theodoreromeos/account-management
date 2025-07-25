@@ -1,6 +1,5 @@
 package com.theodore.account.management.models.dto.requests;
 
-import com.theodore.racingmodel.entities.modeltypes.OrganizationType;
 import com.theodore.racingmodel.enums.Country;
 
 public record CreateNewOrganizationEntityRequestDto(CreateOrganizationAdminRequestDto organizationAdmin,
@@ -8,4 +7,9 @@ public record CreateNewOrganizationEntityRequestDto(CreateOrganizationAdminReque
                                                     String registrationNumber,
                                                     Country country,
                                                     OrganizationType organizationType) {
+
+    public enum OrganizationType {
+
+        MANUFACTURER, INSURANCE_COMPANY, OTHER
+    }
 }
