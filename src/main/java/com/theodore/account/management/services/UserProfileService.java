@@ -14,4 +14,6 @@ public interface UserProfileService {
 
     Optional<UserProfile> findByEmail(String email);
 
+    void deleteUserProfile(UserProfile profile);
+
 }

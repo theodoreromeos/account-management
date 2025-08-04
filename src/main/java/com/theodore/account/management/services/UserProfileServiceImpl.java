@@ -37,4 +37,9 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.findByEmail(email);
     }
 
+    @Override
+    public void deleteUserProfile(UserProfile profile){
+        userProfileRepository.delete(profile);
+    }
+
 }

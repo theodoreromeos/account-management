@@ -5,11 +5,9 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface UserProfileRepository  extends CrudRepository<UserProfile, Long> {
+public interface UserProfileRepository  extends CrudRepository<UserProfile, String> {
 
     boolean existsByEmailAndMobileNumberAllIgnoreCase(String email, String mobileNumber);
-
-    Optional<UserProfile> findById(String id);
 
     Optional<UserProfile> findByEmail(String email);
 

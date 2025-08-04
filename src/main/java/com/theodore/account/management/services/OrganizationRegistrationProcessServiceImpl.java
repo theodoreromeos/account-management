@@ -9,6 +9,7 @@ import com.theodore.account.management.mappers.OrganizationMapper;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.NewOrganizationRegistrationContext;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
@@ -17,7 +18,6 @@ import com.theodore.account.management.repositories.OrganizationRegistrationProc
 import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.account.management.models.dto.requests.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +42,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     private final UserProfileMapper userProfileMapper;
     private final OrganizationMapper organizationMapper;
     private final SagaCompensationActionService sagaCompensationActionService;
+    private final EmailTokenService emailTokenService;
 
     public OrganizationRegistrationProcessServiceImpl(OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                                       OrganizationService organizationService,
@@ -50,7 +51,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                                                       OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                                       UserProfileMapper userProfileMapper,
                                                       OrganizationMapper organizationMapper,
-                                                      SagaCompensationActionService sagaCompensationActionService) {
+                                                      SagaCompensationActionService sagaCompensationActionService,
+                                                      EmailTokenService emailTokenService) {
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationService = organizationService;
         this.userProfileService = userProfileService;
@@ -59,6 +61,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         this.userProfileMapper = userProfileMapper;
         this.organizationMapper = organizationMapper;
         this.sagaCompensationActionService = sagaCompensationActionService;
+        this.emailTokenService = emailTokenService;
     }
 
     @Override
@@ -114,12 +117,14 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         var context = new NewOrganizationRegistrationContext();
         var sagaOrchestrator = new SagaOrchestrator();
 
+        String tempPassword = SecurePasswordGenerator.generatePlaceholderPassword();
+
         sagaOrchestrator
                 .step(
                         () -> {
                             var savedRegistrationProcess = organizationRegistrationProcessRepository.save(registrationProcess);
                             context.setRegistrationProcess(savedRegistrationProcess);
-                            context.setTempPassword(SecurePasswordGenerator.generatePlaceholderPassword());
+                            context.setTempPassword(tempPassword);
                         },
                         () -> organizationRegistrationProcessRepository.delete(context.getRegistrationProcess())
                 )
@@ -132,12 +137,17 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                 )
                 .step(
                         () -> {
-                            var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(context.getRegistrationProcess().getOrgAdminEmail(),
+                            LOGGER.info("CONTEXT password is :{}", context.getTempPassword());
+                            var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(
+                                    context.getRegistrationProcess().getOrgAdminEmail(),
                                     context.getRegistrationProcess().getOrgAdminPhone(),
                                     context.getTempPassword(),
-                                    context.getOrganization().getRegistrationNumber());
+                                    context.getOrganization().getRegistrationNumber()
+                            );
                             //send to auth server and get id
-                            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(orgAuthUserRequest, RoleType.ORGANIZATION_ADMIN);
+                            var authUser = authServerGrpcClient.authServerNewOrganizationUserRegistration(
+                                    orgAuthUserRequest, RoleType.ORGANIZATION_ADMIN
+                            );
                             context.setAuthUserId(authUser.id());
                         },
                         () -> {
@@ -159,7 +169,25 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                         },
                         () -> {
                         }
+                )
+                .step(
+                        () -> {
+                            // Send to email service
+                            var emailToken = emailTokenService.createOrganizationAdminToken(
+                                    context.getSavedProfile().getOrganization(),
+                                    context.getSavedProfile().getId(),
+                                    context.getSavedProfile().getEmail()
+                            );
+                            //var confirmationEmail = new EmailDto(List.of(userEmail), "User Registration Confirmation", link);
+
+                            LOGGER.trace("THE TOKEN : {}", emailToken);//todo: remove
+                        },
+                        () -> {
+                        }
                 );
+
+        //send email with password
+        LOGGER.info("the password is :{}", tempPassword);//todo remove it
 
         sagaOrchestrator.run();
     }

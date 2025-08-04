@@ -3,24 +3,22 @@ package com.theodore.account.management.services;
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.OrganizationUserRegistrationRequest;
-import com.theodore.account.management.enums.RegistrationEmailPurpose;
+import com.theodore.account.management.enums.AccountConfirmedBy;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.UserProfileRegistrationContext;
-import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
-import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
-import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
+import com.theodore.account.management.models.dto.requests.*;
 import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
 import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.account.management.models.dto.requests.CreateNewOrganizationAuthUserRequestDto;
-import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUserRequestDto;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class RegistrationServiceImpl implements RegistrationService {
@@ -109,10 +107,9 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(
                         () -> {
                             // 3) Send email
-                            var token = emailTokenService.createSimpleUserToken(context.getSavedProfile(),
-                                    RegistrationEmailPurpose.PERSONAL.toString());
+                            var token = emailTokenService.createSimpleUserToken(context.getSavedProfile());
                             var link = String.format("%s/simple?token=%s", baseUrl(), token);
-                            var confirmationEmail = new EmailDto(userEmail, "User Registration Confirmation", link);
+                            var confirmationEmail = new EmailDto(List.of(userEmail), "User Registration Confirmation", link);
                             messagingService.sendToEmailService(confirmationEmail);
                             LOGGER.trace("THE LINK : {}", link);//todo: remove
                         },
@@ -182,29 +179,38 @@ public class RegistrationServiceImpl implements RegistrationService {
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> {
+                            userProfileService.deleteUserProfile(context.getSavedProfile());
                         }
                 )
                 .step(
                         () -> {
                             // 3) Save the registration request
                             OrganizationUserRegistrationRequest registrationRequest = new OrganizationUserRegistrationRequest();
-                            //registrationRequest.setCompanyEmail(organization.getEmail());//todo
+                            registrationRequest.setOrganizationRegistrationNumber(organization.getRegistrationNumber());
                             registrationRequest.setOrgUserEmail(userEmail);
 
-                            organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
+                            var savedRegistrationRequest = organizationUserRegistrationRequestService
+                                    .saveOrganizationUserRegistrationRequest(registrationRequest);
+
+                            context.setRegistrationRequest(savedRegistrationRequest);
                         },
                         () -> {
+                            organizationUserRegistrationRequestService.deleteOrganizationUserRegistrationRequest(context.getRegistrationRequest());
                         }
                 )
                 .step(
                         () -> {
                             // 4) Send to email service
-                            var emailToken = emailTokenService.createOrganizationUserToken(context.getSavedProfile(),
-                                    RegistrationEmailPurpose.ORGANIZATION_USER.toString());
+                            var emailToken = emailTokenService.createOrganizationUserToken(
+                                    context.getSavedProfile().getOrganization(),
+                                    context.getSavedProfile().getId(),
+                                    context.getSavedProfile().getEmail(),
+                                    AccountConfirmedBy.USER
+                            );
                             var link = String.format("%s/organization/user?token=%s", baseUrl(), emailToken);//todo
-                            var confirmationEmail = new EmailDto(userEmail, "User Registration Confirmation", link);
+                            var confirmationEmail = new EmailDto(List.of(userEmail), "User Registration Confirmation", link);
                             messagingService.sendToEmailService(confirmationEmail);
-                            LOGGER.trace("THE LINK : {}", link);//todo: remove
+                            LOGGER.trace("THE TOKEN : {}", emailToken);//todo: remove
                         },
                         () -> {
                         }

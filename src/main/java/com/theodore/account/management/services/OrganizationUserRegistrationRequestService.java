@@ -8,6 +8,7 @@ public interface OrganizationUserRegistrationRequestService {
 
     Optional<OrganizationUserRegistrationRequest> findByOrganizationUserEmail(String orgUserEmail);
 
-    void saveOrganizationUserRegistrationRequest(OrganizationUserRegistrationRequest organizationUserRegistrationRequest);
+    OrganizationUserRegistrationRequest saveOrganizationUserRegistrationRequest(OrganizationUserRegistrationRequest organizationUserRegistrationRequest);
 
+    void deleteOrganizationUserRegistrationRequest(OrganizationUserRegistrationRequest organizationUserRegistrationRequest);
 }

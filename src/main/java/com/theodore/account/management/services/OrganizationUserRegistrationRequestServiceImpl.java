@@ -21,7 +21,12 @@ public class OrganizationUserRegistrationRequestServiceImpl implements Organizat
     }
 
     @Override
-    public void saveOrganizationUserRegistrationRequest(OrganizationUserRegistrationRequest organizationUserRegistrationRequest) {
-        organizationUserRegistrationRequestRepository.save(organizationUserRegistrationRequest);
+    public OrganizationUserRegistrationRequest saveOrganizationUserRegistrationRequest(OrganizationUserRegistrationRequest organizationUserRegistrationRequest) {
+        return organizationUserRegistrationRequestRepository.save(organizationUserRegistrationRequest);
+    }
+
+    @Override
+    public void deleteOrganizationUserRegistrationRequest(OrganizationUserRegistrationRequest organizationUserRegistrationRequest){
+        organizationUserRegistrationRequestRepository.delete(organizationUserRegistrationRequest);
     }
 }

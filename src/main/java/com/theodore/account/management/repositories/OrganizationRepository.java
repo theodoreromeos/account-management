@@ -5,7 +5,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface OrganizationRepository extends CrudRepository<Organization, Long> {
+public interface OrganizationRepository extends CrudRepository<Organization, String> {
 
     Optional<Organization> findByRegistrationNumberIgnoreCase(String registrationNumber);
 

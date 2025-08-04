@@ -1,6 +1,9 @@
 package com.theodore.account.management.services;
 
+import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
+import com.theodore.account.management.enums.AccountConfirmedBy;
+import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -18,6 +21,10 @@ public class EmailTokenServiceImpl implements EmailTokenService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailTokenServiceImpl.class);
 
+    private static final String EMAIL = "email";
+    private static final String PURPOSE = "purpose";
+    private static final String ORG = "organization";
+
     private final SecretKey key;
     private final long validitySeconds;
 
@@ -28,13 +35,13 @@ public class EmailTokenServiceImpl implements EmailTokenService {
     }
 
     @Override
-    public String createSimpleUserToken(UserProfile user, String purpose) {
-        LOGGER.info("Creating token for user {} with purpose {}", user.getEmail(), purpose);
+    public String createSimpleUserToken(UserProfile user) {
+        LOGGER.info("Creating token for simple user with email : {} ", user.getEmail());
         Instant now = Instant.now();
         return Jwts.builder()
                 .setSubject(user.getId())
-                .claim("email", user.getEmail())
-                .claim("purpose", purpose)
+                .claim(EMAIL, user.getEmail())
+                .claim(PURPOSE, RegistrationEmailPurpose.PERSONAL.toString())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
                 .signWith(key)
@@ -42,15 +49,37 @@ public class EmailTokenServiceImpl implements EmailTokenService {
     }
 
     @Override
-    public String createOrganizationUserToken(UserProfile user, String purpose) {
-        LOGGER.info("Creating organization user token for user {} with purpose {}", user.getEmail(), purpose);
+    public String createOrganizationUserToken(Organization organization,
+                                              String userId,
+                                              String email,
+                                              AccountConfirmedBy confirmedBy) {
+        LOGGER.info("Creating a token for organization user with email : {} and is able to be confirmed by : {}", email, confirmedBy.toString());
         Instant now = Instant.now();
-        String orgRegNumber = user.getOrganization() != null ? user.getOrganization().getRegistrationNumber() : "";
+        String orgRegNumber = organization != null ? organization.getRegistrationNumber() : "";
         return Jwts.builder()
-                .setSubject(user.getId())
-                .claim("email", user.getEmail())
-                .claim("organization", orgRegNumber)
-                .claim("purpose", purpose)
+                .setSubject(userId)
+                .claim(EMAIL, email)
+                .claim(ORG, orgRegNumber)
+                .claim(PURPOSE, RegistrationEmailPurpose.ORGANIZATION_USER.toString())
+                .claim("confirmedBy", confirmedBy.toString())
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
+                .signWith(key)
+                .compact();
+    }
+
+    @Override
+    public String createOrganizationAdminToken(Organization organization,
+                                               String userId,
+                                               String email) {
+        LOGGER.info("Creating token for organization admin with email : {}", email);
+        Instant now = Instant.now();
+        String orgRegNumber = organization != null ? organization.getRegistrationNumber() : "";
+        return Jwts.builder()
+                .setSubject(userId)
+                .claim(EMAIL, email)
+                .claim(ORG, orgRegNumber)
+                .claim(PURPOSE, RegistrationEmailPurpose.ORGANIZATION_ADMIN.toString())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
                 .signWith(key)

@@ -5,7 +5,15 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <include file="/db/changelog/changes/1-initialization-schema.xml"/>
-    <include file="/db/changelog/changes/2-registration-request-email-list-update.xml"/>
+    <changeSet id="2" author="theodoreromeos">
+        <sql>
+            ALTER TABLE registration_request
+            DROP COLUMN IF EXISTS company_email;
 
+            ALTER TABLE registration_request
+                ADD COLUMN org_registration_number VARCHAR(100) NOT NULL;
+
+        </sql>
+
+    </changeSet>
 </databaseChangeLog>

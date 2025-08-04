@@ -11,13 +11,16 @@ public class OrganizationUserRegistrationRequest extends AuditableUpdateEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "user_email", nullable = false)
-    private String orgUserEmail;
-    @Column(name = "company_email", nullable = false)
-    private String companyEmail;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private RegistrationStatus status = RegistrationStatus.PENDING_EMPLOYEE;
+
+    @Column(name = "user_email", nullable = false)
+    private String orgUserEmail;
+
+    @Column(name = "org_registration_number", nullable = false)
+    private String organizationRegistrationNumber;
 
     public Long getId() {
         return id;
@@ -25,6 +28,14 @@ public class OrganizationUserRegistrationRequest extends AuditableUpdateEntity {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public RegistrationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(RegistrationStatus status) {
+        this.status = status;
     }
 
     public String getOrgUserEmail() {
@@ -35,19 +46,11 @@ public class OrganizationUserRegistrationRequest extends AuditableUpdateEntity {
         this.orgUserEmail = orgUserEmail;
     }
 
-    public String getCompanyEmail() {
-        return companyEmail;
+    public String getOrganizationRegistrationNumber() {
+        return organizationRegistrationNumber;
     }
 
-    public void setCompanyEmail(String companyEmail) {
-        this.companyEmail = companyEmail;
-    }
-
-    public RegistrationStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(RegistrationStatus status) {
-        this.status = status;
+    public void setOrganizationRegistrationNumber(String organizationRegistrationNumber) {
+        this.organizationRegistrationNumber = organizationRegistrationNumber;
     }
 }
