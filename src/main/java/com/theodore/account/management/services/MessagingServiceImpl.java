@@ -21,11 +21,13 @@ public class MessagingServiceImpl implements MessagingService {
     }
 
     @Override
-    public void sendToEmailService(EmailDto... dto) {
+    public void sendToEmailService(EmailDto emails) {
+        LOGGER.info("Sending emails");
+
         rabbitTemplate.convertAndSend(
                 EmailQueueEnum.QUEUE_EXCHANGE.getValue(),
                 EmailQueueEnum.QUEUE_ROUTING_KEY.getValue(),
-                dto
+                emails
         );
     }
 

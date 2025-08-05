@@ -1,17 +1,15 @@
 package com.theodore.account.management.mappers;
 
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
-import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
-import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
+import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
 import com.theodore.racingmodel.enums.Country;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class OrganizationRegistrationProcessMapperTest {
 
@@ -84,7 +82,36 @@ class OrganizationRegistrationProcessMapperTest {
             assertEquals(USER_SURNAME, dto.getOrgAdminSurname());
         }
 
+    }
 
+    @Nested
+    class MapOrganizationRegistrationProcessRequestDtoToEntity {
+
+        private static final CreateNewOrganizationEntityRequestDto.OrganizationType ORG_TYPE =
+                CreateNewOrganizationEntityRequestDto.OrganizationType.MANUFACTURER;
+
+        @Test
+        void givenRequest_whenMappingToResponseDto_thenMappingSuccessful() {
+            // given
+            var createAdminReq = new CreateOrganizationAdminRequestDto(EMAIL, PHONE_NUMBER, USER_NAME, USER_SURNAME);
+
+            var source = new CreateNewOrganizationEntityRequestDto(createAdminReq, ORG_NAME, REGISTRATION_NUMBER, COUNTRY, ORG_TYPE);
+
+            // when
+            var entity = orgRegistrationProcessMapper.requestDtoToEntity(source);
+
+            // then
+            assertNotNull(entity);
+            assertEquals(OrganizationRegistrationStatus.PENDING, entity.getAdminApprovedStatus());
+            assertEquals(ORG_NAME, entity.getOrganizationName());
+            assertEquals(REGISTRATION_NUMBER, entity.getRegistrationNumber());
+            assertEquals(COUNTRY, entity.getCountry());
+
+            assertEquals(EMAIL, entity.getOrgAdminEmail());
+            assertEquals(USER_NAME, entity.getOrgAdminName());
+            assertEquals(USER_SURNAME, entity.getOrgAdminSurname());
+            assertEquals(PHONE_NUMBER, entity.getOrgAdminPhone());
+        }
 
     }
 

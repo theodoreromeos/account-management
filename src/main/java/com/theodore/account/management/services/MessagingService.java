@@ -5,7 +5,7 @@ import com.theodore.queue.common.emails.EmailDto;
 
 public interface MessagingService {
 
-    void sendToEmailService(EmailDto... dto);
+    void sendToEmailService(EmailDto dto);
 
     void rollbackCredentialsSave(CredentialsRollbackEventDto dto);
 

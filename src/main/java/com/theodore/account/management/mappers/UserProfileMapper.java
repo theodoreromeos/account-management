@@ -55,6 +55,7 @@ public interface UserProfileMapper {
                                                     String userAuthId);
 
 
+    @Mapping(target = "organization", ignore = true)
     @Mapping(target = "dateCreated", ignore = true)
     @Mapping(target = "dateUpdated", ignore = true)
     @Mapping(target = "address", ignore = true)

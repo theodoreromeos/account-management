@@ -16,6 +16,7 @@ import com.theodore.account.management.models.dto.responses.RegistrationProcessR
 import com.theodore.account.management.models.dto.responses.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
+import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
@@ -43,6 +44,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     private final OrganizationMapper organizationMapper;
     private final SagaCompensationActionService sagaCompensationActionService;
     private final EmailTokenService emailTokenService;
+    private final MessagingService messagingService;
 
     public OrganizationRegistrationProcessServiceImpl(OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                                       OrganizationService organizationService,
@@ -52,7 +54,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                                                       UserProfileMapper userProfileMapper,
                                                       OrganizationMapper organizationMapper,
                                                       SagaCompensationActionService sagaCompensationActionService,
-                                                      EmailTokenService emailTokenService) {
+                                                      EmailTokenService emailTokenService,
+                                                      MessagingService messagingService) {
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationService = organizationService;
         this.userProfileService = userProfileService;
@@ -62,6 +65,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         this.organizationMapper = organizationMapper;
         this.sagaCompensationActionService = sagaCompensationActionService;
         this.emailTokenService = emailTokenService;
+        this.messagingService = messagingService;
     }
 
     @Override
@@ -117,14 +121,12 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         var context = new NewOrganizationRegistrationContext();
         var sagaOrchestrator = new SagaOrchestrator();
 
-        String tempPassword = SecurePasswordGenerator.generatePlaceholderPassword();
-
         sagaOrchestrator
                 .step(
                         () -> {
                             var savedRegistrationProcess = organizationRegistrationProcessRepository.save(registrationProcess);
                             context.setRegistrationProcess(savedRegistrationProcess);
-                            context.setTempPassword(tempPassword);
+                            context.setTempPassword(SecurePasswordGenerator.generatePlaceholderPassword());
                         },
                         () -> organizationRegistrationProcessRepository.delete(context.getRegistrationProcess())
                 )
@@ -178,16 +180,16 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                                     context.getSavedProfile().getId(),
                                     context.getSavedProfile().getEmail()
                             );
-                            //var confirmationEmail = new EmailDto(List.of(userEmail), "User Registration Confirmation", link);
-
+                            String body = emailToken + " " + context.getTempPassword();
+                            var confirmationEmail = new EmailDto(List.of(context.getSavedProfile().getEmail()),
+                                    "Organization Admin Account Confirmation", body);
+                            messagingService.sendToEmailService(confirmationEmail);
                             LOGGER.trace("THE TOKEN : {}", emailToken);//todo: remove
+                            LOGGER.info("the password is :{}", context.getTempPassword());//todo remove it
                         },
                         () -> {
                         }
                 );
-
-        //send email with password
-        LOGGER.info("the password is :{}", tempPassword);//todo remove it
 
         sagaOrchestrator.run();
     }
