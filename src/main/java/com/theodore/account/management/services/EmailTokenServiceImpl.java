@@ -53,7 +53,7 @@ public class EmailTokenServiceImpl implements EmailTokenService {
                                               String userId,
                                               String email,
                                               AccountConfirmedBy confirmedBy) {
-        LOGGER.info("Creating a token for organization user with email : {} and is able to be confirmed by : {}", email, confirmedBy.toString());
+        LOGGER.info("Creating a token for organization user with email : {} and is able to be confirmed by : {}", email, confirmedBy);
         Instant now = Instant.now();
         String orgRegNumber = organization != null ? organization.getRegistrationNumber() : "";
         return Jwts.builder()

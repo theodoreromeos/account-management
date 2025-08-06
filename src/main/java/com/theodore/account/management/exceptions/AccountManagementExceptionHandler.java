@@ -2,6 +2,7 @@ package com.theodore.account.management.exceptions;
 
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.models.MobilityAppErrorResponse;
+import io.grpc.StatusRuntimeException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class AccountManagementExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(AccountManagementExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccountManagementExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
@@ -29,7 +30,7 @@ public class AccountManagementExceptionHandler {
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.joining("; "));
 
-        logger.warn("Validation failed [{}]: {}", ex.getBindingResult().getObjectName(), fieldErrors, ex);
+        LOGGER.warn("Validation failed [{}]: {}", ex.getBindingResult().getObjectName(), fieldErrors, ex);
 
         String userMessage = getExceptionMessage(ex.getBindingResult(), "Bad Request");
 
@@ -40,50 +41,57 @@ public class AccountManagementExceptionHandler {
 
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleTokenExpiredErrors(ExpiredJwtException ex) {
-
-        logger.warn("JWT expired at {}: {}", ex.getClaims().getExpiration(), ex.getMessage(), ex);
-
+        LOGGER.warn("JWT expired at {}: {}", ex.getClaims().getExpiration(), ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Expired token", Instant.now());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleInvalidTokenErrors(JwtException ex) {
-
-        logger.error("Invalid JWT token: {}", ex.getMessage(), ex);
-
+        LOGGER.error("Invalid JWT token: {}", ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Invalid token", Instant.now());
-
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleNotFoundErrors(NotFoundException ex) {
-
-        logger.warn("Resource not found: {}", ex.getMessage(), ex);
-
+        LOGGER.warn("Resource not found: {}", ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse(ex.getMessage(), Instant.now());
-
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AccountConfirmationException.class)
+    public ResponseEntity<MobilityAppErrorResponse> handleAccountConfirmationException(AccountConfirmationException ex) {
+        LOGGER.error("Account confirmation failed: {}", ex.getMessage(), ex);
+        MobilityAppErrorResponse error = new MobilityAppErrorResponse("Account confirmation failed", Instant.now());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidStatusException.class)
+    public ResponseEntity<MobilityAppErrorResponse> handleInvalidStatusException(InvalidStatusException ex) {
+        LOGGER.error("Invalid Status : {}", ex.getMessage(), ex);
+        MobilityAppErrorResponse error = new MobilityAppErrorResponse("Invalid Status", Instant.now());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<MobilityAppErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        LOGGER.error("{}", ex.getMessage(), ex);
+        MobilityAppErrorResponse error = new MobilityAppErrorResponse(ex.getMessage(), Instant.now());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleRuntimeException(RuntimeException ex) {
-
-        logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
-
+        LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Unexpected error occurred", Instant.now());
-
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MobilityAppErrorResponse> handleGeneral(Exception ex) {
-
-        logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
-
+        LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Unexpected error occurred", Instant.now());
-
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

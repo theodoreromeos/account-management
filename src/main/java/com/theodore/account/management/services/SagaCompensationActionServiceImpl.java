@@ -1,7 +1,5 @@
 package com.theodore.account.management.services;
 
-import com.theodore.account.management.entities.UserProfile;
-import com.theodore.account.management.models.UserProfileRegistrationContext;
 import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

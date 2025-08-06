@@ -5,6 +5,8 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
 import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.enums.RegistrationStatus;
+import com.theodore.account.management.exceptions.AccountConfirmationException;
+import com.theodore.account.management.exceptions.InvalidStatusException;
 import com.theodore.account.management.models.dto.requests.ConfirmOrgAdminEmailRequestDto;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.queue.common.emails.EmailDto;
@@ -16,6 +18,7 @@ import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -66,7 +69,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         //send to auth server that user is authenticated
         var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
         if (!response.getConfirmationStatus().equals(ConfirmationStatus.CONFIRMED)) {
-            throw new RuntimeException("confirmation failed");//todo: better exception or no exception
+            throw new AccountConfirmationException("Authorization server responded negatively");
         }
         // send successful confirmation email - with rabbitmq to email service
         var successfulConfirmationEmail = new EmailDto(List.of(email),
@@ -94,7 +97,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         OrganizationUserRegistrationRequest registrationRequest = getOrganizationUserRegistrationRequest(email);
 
         if (!RegistrationStatus.PENDING_EMPLOYEE.equals(registrationRequest.getStatus())) {
-            throw new JwtException("Token mismatch");//todo: change this exception
+            throw new InvalidStatusException("Status should be PENDING_EMPLOYEE");
         }
         registrationRequest.setStatus(RegistrationStatus.PENDING_COMPANY);
 
@@ -102,11 +105,6 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
         var adminInfoList = authServerGrpcClient
                 .getOrganizationAdminInfoFromAuthServer(registrationRequest.getOrganizationRegistrationNumber());
-
-        LOGGER.info("printing admin info list");
-        if (adminInfoList != null) {
-            adminInfoList.forEach(adminInfo -> System.out.println("id :" + adminInfo.orgAdminId()));
-        }
 
         var emailList = new ArrayList<EmailDto>();
 
@@ -146,7 +144,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         OrganizationUserRegistrationRequest registrationRequest = getOrganizationUserRegistrationRequest(email);
 
         if (!RegistrationStatus.PENDING_COMPANY.equals(registrationRequest.getStatus())) {
-            throw new JwtException("Token mismatch");//todo: change this exception
+            throw new InvalidStatusException("Status should be PENDING_COMPANY");
         }
 
         registrationRequest.setStatus(RegistrationStatus.APPROVED);
@@ -169,12 +167,12 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     public void confirmOrganizationAdminEmail(ConfirmOrgAdminEmailRequestDto request, String token) {
         LOGGER.info("CONFIRMING ADMIN ACCOUNT");
         if (!request.newPassword().equals(request.confirmNewPassword())) {
-            throw new JwtException("Password mismatch");//todo
+            throw new IllegalArgumentException("Password mismatch");
         }
         Jws<Claims> claims = emailTokenService.parseToken(token);
         String purpose = claims.getBody().get(PURPOSE, String.class);
         if (!RegistrationEmailPurpose.ORGANIZATION_ADMIN.toString().equals(purpose)) {
-            throw new JwtException("Token mismatch");//todo
+            throw new JwtException("Token mismatch - purpose");
         }
         String userId = claims.getBody().getSubject();
 
@@ -191,7 +189,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         if (!user.getEmail().equals(email)) {
-            throw new JwtException("Token mismatch");//todo: better exception
+            throw new JwtException("Token mismatch - email");
         }
     }
 
@@ -199,7 +197,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         UserProfile user = userProfileService.findUserProfileById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         if (!user.getEmail().equals(email)) {
-            throw new JwtException("Token mismatch");//todo: better exception
+            throw new JwtException("Token mismatch - email");
         }
         return user;
     }
@@ -220,14 +218,9 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     }
 
     private OrganizationUserRegistrationRequest getOrganizationUserRegistrationRequest(String email) {
-        Optional<OrganizationUserRegistrationRequest> optionalRegistrationRequest = organizationUserRegistrationRequestService
-                .findByOrganizationUserEmail(email);
-
-        if (optionalRegistrationRequest.isEmpty()) {
-            throw new JwtException("Token mismatch");//todo: change this exception
-        }
-
-        return optionalRegistrationRequest.get();
+        return organizationUserRegistrationRequestService
+                .findByOrganizationUserEmail(email)
+                .orElseThrow(() -> new NotFoundException("Organization User Registration Request not found"));
     }
 
     private String baseUrl() {//todo remove it
