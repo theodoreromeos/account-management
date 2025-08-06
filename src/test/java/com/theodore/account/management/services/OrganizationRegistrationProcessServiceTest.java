@@ -12,7 +12,7 @@ import com.theodore.account.management.models.dto.requests.OrganizationRegistrat
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.racingmodel.enums.Country;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.account.management.models.dto.responses.AuthUserCreatedResponseDto;
+import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class OrganizationRegistrationProcessServiceTest {
     private static final String USER_PHONE = "123456";
     private static final String USER_NAME = "test_name";
     private static final String USER_SURNAME = "test_surname";
-    private static final AuthUserCreatedResponseDto AUTH_USER = new AuthUserCreatedResponseDto(USER_ID);
+    private static final AuthUserIdResponseDto AUTH_USER = new AuthUserIdResponseDto(USER_ID);
     private static final String ORG_REG_NUMBER = "test-registration-number";
     private static final String ORG_NAME = "test-organization-name";
     private static final Country ORG_COUNTRY = Country.GRC;
@@ -58,9 +58,13 @@ class OrganizationRegistrationProcessServiceTest {
     private AuthServerGrpcClient authServerGrpcClient;
     @Mock
     private SagaCompensationActionService sagaCompensationActionService;
+    @Mock
+    private EmailTokenService emailTokenService;
+    @Mock
+    private MessagingService messagingService;
 
     @Spy
-    private OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper = Mappers.getMapper(OrganizationRegistrationProcessMapper.class);
+    OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper = Mappers.getMapper(OrganizationRegistrationProcessMapper.class);
     @Spy
     private UserProfileMapper userProfileMapper = Mappers.getMapper(UserProfileMapper.class);
     @Spy
@@ -192,7 +196,7 @@ class OrganizationRegistrationProcessServiceTest {
             verifyNoInteractions(userProfileService);
         }
 
-        @DisplayName("organizationRegistrationDecision: registration approved  (positive scenario)")
+        @DisplayName("organizationRegistrationDecision: registration approved (positive scenario)")
         @Test
         void givenApprovalDecision_whenDecidingOnOrganizationRegistration_thenApproveOrganizationRegistration() {
             // given

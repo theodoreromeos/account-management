@@ -14,6 +14,13 @@ public class SecurePasswordGenerator {
     private SecurePasswordGenerator() {
     }
 
+    /**
+     * Generates a secure placeholder password.
+     * This method creates a 48-byte random value, encodes it using Base64,
+     * and returns the result as a string.
+     *
+     * @return a Base64-encoded String
+     */
     public static String generatePlaceholderPassword() {
         byte[] randomBytes = new byte[48];
         secureRandom.nextBytes(randomBytes);

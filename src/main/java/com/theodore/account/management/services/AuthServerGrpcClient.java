@@ -3,7 +3,7 @@ package com.theodore.account.management.services;
 import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationAuthUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUserRequestDto;
-import com.theodore.account.management.models.dto.responses.AuthUserCreatedResponseDto;
+import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.user.*;
@@ -25,7 +25,13 @@ public class AuthServerGrpcClient {
     @GrpcClient("auth-server")
     AuthServerAccountManagementGrpc.AuthServerAccountManagementBlockingStub authServerAccountManagementClient;
 
-    public AuthUserCreatedResponseDto authServerNewSimpleUserRegistration(CreateNewSimpleAuthUserRequestDto requestDto) {
+    /**
+     * Registers a new simple user via gRPC call to the auth server.
+     *
+     * @param requestDto user registration data
+     * @return response containing the created user's id
+     */
+    public AuthUserIdResponseDto authServerNewSimpleUserRegistration(CreateNewSimpleAuthUserRequestDto requestDto) {
         LOGGER.info("Sending request via grpc to auth server to register a new simple user's credentials");
         var grpcRequest = CreateNewSimpleAuthUserRequest.newBuilder()
                 .setEmail(requestDto.email())
@@ -37,10 +43,17 @@ public class AuthServerGrpcClient {
 
         LOGGER.info("Auth server responded with user's id : {}", newUserCreated.getUserId());
 
-        return new AuthUserCreatedResponseDto(newUserCreated.getUserId());
+        return new AuthUserIdResponseDto(newUserCreated.getUserId());
     }
 
-    public AuthUserCreatedResponseDto authServerNewOrganizationUserRegistration(
+    /**
+     * Registers a new organization user via gRPC call to the auth server.
+     *
+     * @param requestDto user registration data
+     * @param role       the role type that the user will have in the auth server
+     * @return response containing the created user's id
+     */
+    public AuthUserIdResponseDto authServerNewOrganizationUserRegistration(
             CreateNewOrganizationAuthUserRequestDto requestDto,
             RoleType role
     ) {
@@ -58,14 +71,26 @@ public class AuthServerGrpcClient {
 
         LOGGER.info("Auth server responded with user's id : {}", newUserCreated.getUserId());
 
-        return new AuthUserCreatedResponseDto(newUserCreated.getUserId());
+        return new AuthUserIdResponseDto(newUserCreated.getUserId());
     }
 
+    /**
+     * Confirms user's account via gRPC call to the auth server.
+     *
+     * @param userId user id
+     * @return if the operation was successful or not
+     */
     public UserConfirmationResponse authServerNewUserConfirmation(String userId) {
         var request = ConfirmUserAccountRequest.newBuilder().setUserId(userId).build();
         return authServerRegistrationClient.confirmUserAccount(request);
     }
 
+    /**
+     * Fetches all the organization admin info from the auth server for an organization
+     *
+     * @param orgRegistrationNumber organization registration number
+     * @return list of admin info containing their emails and ids
+     */
     public List<OrgAdminInfoResponseDto> getOrganizationAdminInfoFromAuthServer(String orgRegistrationNumber) {
         var request = OrgRegistrationNumberRequest.newBuilder().setRegistrationNumber(orgRegistrationNumber).build();
         var response = authServerRegistrationClient.getAdminIdAndEmails(request);
@@ -75,6 +100,14 @@ public class AuthServerGrpcClient {
                 .toList();
     }
 
+    /**
+     * Confirms admin's account via gRPC call to the auth server.
+     *
+     * @param adminId     user id
+     * @param oldPassword the current password
+     * @param newPassword the new password
+     * @return if the operation was successful or not
+     */
     public UserConfirmationResponse confirmAdminAccount(String adminId, String oldPassword, String newPassword) {
         var request = ConfirmAdminAccountRequest.newBuilder()
                 .setUserId(adminId)
@@ -84,7 +117,13 @@ public class AuthServerGrpcClient {
         return authServerRegistrationClient.confirmOrganizationAdminAccount(request);
     }
 
-    public AuthUserCreatedResponseDto manageAuthServerUserAccount(AuthUserManageAccountRequestDto requestDto) {
+    /**
+     * Sends changes for a user account data via gRPC call to the auth server.
+     *
+     * @param requestDto contains current and new password, phone number , current and new emails
+     * @return user id
+     */
+    public AuthUserIdResponseDto manageAuthServerUserAccount(AuthUserManageAccountRequestDto requestDto) {
         LOGGER.info("Sending request to manage auth server user's : {} details", requestDto.oldEmail());
         var grpcRequest = ManageAuthUserAccountRequest.newBuilder()
                 .setOldEmail(requestDto.oldEmail())
@@ -96,7 +135,7 @@ public class AuthServerGrpcClient {
 
         var authUser = this.authServerAccountManagementClient.manageUserAccount(grpcRequest);
 
-        return new AuthUserCreatedResponseDto(authUser.getUserId());
+        return new AuthUserIdResponseDto(authUser.getUserId());
     }
 
 }

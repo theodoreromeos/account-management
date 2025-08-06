@@ -2,16 +2,15 @@ package com.theodore.account.management.services;
 
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
-import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
+import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.racingmodel.enums.Country;
 import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.account.management.models.dto.responses.AuthUserCreatedResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ class RegistrationServiceTest {
     private static final String USER_PASSWORD = "test-password";
     private static final String USER_NAME = "test_name";
     private static final String USER_SURNAME = "test_surname";
-    private static final AuthUserCreatedResponseDto AUTH_USER = new AuthUserCreatedResponseDto(USER_ID);
+    private static final AuthUserIdResponseDto AUTH_USER = new AuthUserIdResponseDto(USER_ID);
     private static final String ORG_REG_NUMBER = "test-registration-number";
 
     @InjectMocks
@@ -99,7 +98,7 @@ class RegistrationServiceTest {
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
             when(authServerGrpcClient.authServerNewSimpleUserRegistration(any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
-            when(emailTokenService.createSimpleUserToken(eq(savedProfile), any())).thenReturn(TOKEN);
+            when(emailTokenService.createSimpleUserToken(savedProfile)).thenReturn(TOKEN);
 
             // when
             var response = registrationService.registerNewSimpleUser(dto);
@@ -109,7 +108,7 @@ class RegistrationServiceTest {
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(authServerGrpcClient, times(1)).authServerNewSimpleUserRegistration(any());
             verify(userProfileService, times(1)).saveUserProfile(any());
-            verify(emailTokenService, times(1)).createSimpleUserToken(savedProfile, RegistrationEmailPurpose.PERSONAL.toString());
+            verify(emailTokenService, times(1)).createSimpleUserToken(savedProfile);
             verify(messagingService, times(1)).sendToEmailService(any());
         }
 
@@ -197,7 +196,7 @@ class RegistrationServiceTest {
             when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
-            when(emailTokenService.createOrganizationUserToken(eq(savedProfile), any())).thenReturn(TOKEN);
+            when(emailTokenService.createOrganizationUserToken(any(), any(), any(), any())).thenReturn(TOKEN);
 
             // when
             var result = registrationService.registerNewOrganizationUser(dto);
@@ -210,7 +209,7 @@ class RegistrationServiceTest {
             verify(organizationService, times(1)).findByRegistrationNumber(any());
             verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
             verify(userProfileService, times(1)).saveUserProfile(any());
-            verify(emailTokenService, times(1)).createOrganizationUserToken(savedProfile, RegistrationEmailPurpose.ORGANIZATION_USER.toString());
+            verify(emailTokenService, times(1)).createOrganizationUserToken(any(), any(), any(), any());
             verify(messagingService, times(1)).sendToEmailService(any());
         }
 
