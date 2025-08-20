@@ -4,7 +4,6 @@ import com.theodore.account.management.models.dto.requests.ConfirmOrgAdminEmailR
 import com.theodore.account.management.services.ConfirmationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,36 +18,28 @@ public class ConfirmationController {
     }
 
     @PostMapping("/simple-user")
-    public ResponseEntity<String> confirmSimpleUserEmail(@RequestParam @NotBlank String token) {
-
+    public ResponseEntity<Void> confirmSimpleUserEmail(@RequestParam @NotBlank String token) {
         confirmationService.confirmSimpleUserEmail(token);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Confirmation successful");
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/org-user")
-    public ResponseEntity<String> confirmOrganizationUserEmailByUser(@RequestParam @NotBlank String token) {
-
+    public ResponseEntity<Void> confirmOrganizationUserEmailByUser(@RequestParam @NotBlank String token) {
         confirmationService.confirmOrganizationUserEmailByUser(token);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Confirmation successful");
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/org-user/admin")
-    public ResponseEntity<String> organizationUserConfirmationByOrganization(@RequestParam @NotBlank String token) {
-
+    public ResponseEntity<Void> organizationUserConfirmationByOrganization(@RequestParam @NotBlank String token) {
         confirmationService.confirmOrganizationUserEmailByOrganization(token);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Confirmation successful");
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/org-admin")
-    public ResponseEntity<String> organizationAdminEmailConfirmation(@RequestParam @NotBlank String token,
-                                                                     @RequestBody @Valid ConfirmOrgAdminEmailRequestDto request) {
-
+    public ResponseEntity<Void> organizationAdminEmailConfirmation(@RequestParam @NotBlank String token,
+                                                                   @RequestBody @Valid ConfirmOrgAdminEmailRequestDto request) {
         confirmationService.confirmOrganizationAdminEmail(request, token);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Confirmation successful");
+        return ResponseEntity.noContent().build();
     }
 
 }

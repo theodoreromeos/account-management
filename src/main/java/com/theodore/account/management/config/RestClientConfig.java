@@ -1,5 +1,10 @@
 package com.theodore.account.management.config;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +17,6 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
 
     @Bean
-    @Qualifier("authServerRestClient")
     public RestClient authServerRestClientBean(@Qualifier("authorizedClientManager")
                                                OAuth2AuthorizedClientManager authorizedClientManager) {
 
@@ -27,7 +31,6 @@ public class RestClientConfig {
     }
 
     @Bean
-    @Qualifier("authorizedClientManager")
     public OAuth2AuthorizedClientManager authorizedClientManager(ClientRegistrationRepository clientRegistrations,
                                                                  OAuth2AuthorizedClientService clientService) {
 
@@ -40,6 +43,22 @@ public class RestClientConfig {
 
         manager.setAuthorizedClientProvider(provider);
         return manager;
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearerAuth";
+
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")))
+                .info(new Info().title("Account Management api").version("v1"));
     }
 
 }

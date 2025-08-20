@@ -10,6 +10,7 @@ import com.theodore.account.management.services.ProfileManagementService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,30 +27,30 @@ public class AdminController {
     }
 
     @PostMapping("/manage")
-    public ResponseEntity<String> manageAdminInfo(@RequestBody @Valid UserChangeInformationRequestDto requestDto) {
+    @PreAuthorize("hasRole('SYS_ADMIN') and @emailValidator.isAllowed(authentication, #requestDto.oldEmail)")
+    public ResponseEntity<Void> manageAdminInfo(@RequestBody @Valid UserChangeInformationRequestDto requestDto) {
 
         profileManagementService.adminProfileManagement(requestDto);
 
-        return ResponseEntity.status(HttpStatus.OK).body("ok");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/org-registration/search")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<SearchResponse<RegistrationProcessResponseDto>> searchOrganizationRegistrationRequests(
             @RequestParam int page,
             @RequestParam int pageSize,
             @RequestBody @Valid SearchRegistrationProcessRequestDto searchRequest
     ) {
-
         var response = organizationRegistrationProcessService.searchOrganizationRegistrationProcess(searchRequest, page, pageSize);
-
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/org-registration/decision")
-    public ResponseEntity<String> organizationRegistrationDecision(@RequestBody @Valid OrganizationRegistrationDecisionRequestDto requestDto) {
-
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<Void> organizationRegistrationDecision(@RequestBody @Valid OrganizationRegistrationDecisionRequestDto requestDto) {
         organizationRegistrationProcessService.organizationRegistrationDecision(requestDto);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("ok");
+        return ResponseEntity.ok().build();
     }
+
 }
