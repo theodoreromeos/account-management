@@ -12,7 +12,7 @@ public class AccountManagementTestUtils {
                 .count();
     }
 
-    public static String generateUserId() {
+    public static String generateUlId() {
         String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(26);
