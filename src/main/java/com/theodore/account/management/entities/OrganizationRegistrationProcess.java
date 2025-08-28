@@ -41,7 +41,7 @@ public class OrganizationRegistrationProcess extends AuditableUpdateEntity {
     private String orgAdminSurname;
 
     @Column(name = "admin_approved")
-    @Basic
+    @Enumerated(EnumType.STRING)
     private OrganizationRegistrationStatus adminApprovedStatus = OrganizationRegistrationStatus.PENDING;
 
     public Long getId() {

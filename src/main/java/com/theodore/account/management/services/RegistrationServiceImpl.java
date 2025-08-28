@@ -102,6 +102,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> {
+                            userProfileService.deleteUserProfile(context.getSavedProfile());
                         }
                 )
                 .step(
