@@ -4,8 +4,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
-@Component("emailValidator")
-public class EmailValidator {
+@Component("emailGuard")
+public class EmailGuard {
 
     public boolean isAllowed(Authentication authentication, String requestEmail) {
         if (authentication.getPrincipal() instanceof Jwt jwt) {
