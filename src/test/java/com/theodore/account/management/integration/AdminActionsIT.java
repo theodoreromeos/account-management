@@ -10,6 +10,7 @@ import com.theodore.account.management.utils.JwtTestUtils;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.enums.Country;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,6 +129,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: invalid token validation fail and forbidden is returned (negative scenario)")
         void givenInvalidToken_whenSearchingOrgRegistrationProcesses_returnForbidden() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(invalidToken);
@@ -149,6 +151,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: given mismatched criteria no results are found and ok is returned (positive scenario)")
         void givenMismatchedCriteria_whenSearchingOrgRegistrationProcesses_returnOkAndNoResults() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -169,6 +172,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: with criteria - status PENDING and country USA, results are returned (positive scenario)")
         void givenCriteriaStatusCountry_whenSearchingOrgRegistrationProcesses_returnResults() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -190,6 +194,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: with criteria - organization name, result is returned (positive scenario)")
         void givenCriteriaOrgName_whenSearchingOrgRegistrationProcesses_returnResult() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -210,6 +215,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: with criteria - organizationRegistrationNumber, result is returned (positive scenario)")
         void givenCriteriaOrgRegNumber_whenSearchingOrgRegistrationProcesses_returnResult() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -230,6 +236,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: with no criteria - all results are returned (positive scenario)")
         void givenCriteriaAllResults_whenSearchingOrgRegistrationProcesses_returnResults() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -251,6 +258,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: with no criteria - page 2 results are returned (positive scenario)")
         void givenCriteriaAllResults_whenSearchingOrgRegistrationProcessesPage2_returnResults() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -271,6 +279,7 @@ class AdminActionsIT extends BasePostgresTest {
         }
 
         @Test
+        @DisplayName("searchOrgRegistrationProcesses: with no criteria - page 3 results are returned (positive scenario)")
         void givenCriteriaAllResults_whenSearchingOrgRegistrationProcessesPage3_returnResults() {
             // given
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
