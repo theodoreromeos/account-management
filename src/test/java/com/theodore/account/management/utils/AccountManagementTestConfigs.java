@@ -15,10 +15,12 @@ public class AccountManagementTestConfigs {
     public TestDataFeeder testDataFeeder(UserProfileRepository userProfileRepository,
                                          OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                          OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
-                                         OrganizationRepository organizationRepository) {
+                                         OrganizationRepository organizationRepository,
+                                         OrganizationRegistrationProcessRepository orgRegistrationProcessRepository) {
         return new TestDataFeeder(userProfileRepository,
                 organizationRegistrationProcessRepository,
                 organizationUserRegistrationRequestRepository,
-                organizationRepository);
+                organizationRepository,
+                orgRegistrationProcessRepository);
     }
 }

@@ -1,7 +1,9 @@
 package com.theodore.account.management.integration;
 
 import com.theodore.account.management.entities.Organization;
+import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.UserProfile;
+import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
@@ -11,6 +13,7 @@ import com.theodore.account.management.utils.TestData;
 import com.theodore.racingmodel.enums.Country;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TestDataFeeder {
@@ -19,15 +22,18 @@ public class TestDataFeeder {
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final OrganizationRepository organizationRepository;
+    private final OrganizationRegistrationProcessRepository orgRegistrationProcessRepository;
 
     public TestDataFeeder(UserProfileRepository userProfileRepository,
                           OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                           OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
-                          OrganizationRepository organizationRepository) {
+                          OrganizationRepository organizationRepository,
+                          OrganizationRegistrationProcessRepository orgRegistrationProcessRepository) {
         this.userProfileRepository = userProfileRepository;
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.organizationRepository = organizationRepository;
+        this.orgRegistrationProcessRepository = orgRegistrationProcessRepository;
     }
 
     public void feedUserProfileTable() {
@@ -46,6 +52,11 @@ public class TestDataFeeder {
         organizationRepository.saveAll(userProfileList);
     }
 
+    public void feedOrganizationRegistrationProcess() {
+        orgRegistrationProcessRepository.deleteAll();
+        orgRegistrationProcessRepository.saveAll(createOrganizationRegistrationProcess());
+    }
+
     private UserProfile createSimpleUserProfile(String firstName, String lastName, String mobileNumber) {
         String id = AccountManagementTestUtils.generateUlId();
         String email = firstName + lastName + "@mobilitymail.com";
@@ -62,6 +73,34 @@ public class TestDataFeeder {
         org.setRegistrationNumber(orgRegNumber);
         org.setCountry(Country.COL);
         return org;
+    }
+
+
+    private List<OrganizationRegistrationProcess> createOrganizationRegistrationProcess() {
+        List<OrganizationRegistrationProcess> organizationRegistrationProcessList = new ArrayList<>();
+        for (int i = 1; i <= 15; i++) {
+            var organizationRegistrationProcess = new OrganizationRegistrationProcess();
+            organizationRegistrationProcess.setOrganizationName("CompanyName" + i);
+            organizationRegistrationProcess.setRegistrationNumber("REG-" + i);
+            if (i < 5) {
+                organizationRegistrationProcess.setCountry(Country.USA);
+            } else if (i < 10) {
+                organizationRegistrationProcess.setCountry(Country.GRC);
+            } else {
+                organizationRegistrationProcess.setCountry(Country.DNK);
+            }
+            organizationRegistrationProcess.setOrgAdminEmail(TestData.EXISTING_EMAIL);
+            organizationRegistrationProcess.setOrgAdminPhone(TestData.EXISTING_MOBILE);
+            organizationRegistrationProcess.setOrgAdminName(TestData.EXISTING_NAME);
+            organizationRegistrationProcess.setOrgAdminSurname(TestData.EXISTING_SURNAME);
+            if (i > 3 && i < 8) {
+                organizationRegistrationProcess.setAdminApprovedStatus(OrganizationRegistrationStatus.APPROVED);
+            } else if (i >= 8 && i < 11) {
+                organizationRegistrationProcess.setAdminApprovedStatus(OrganizationRegistrationStatus.REJECTED);
+            }
+            organizationRegistrationProcessList.add(organizationRegistrationProcess);
+        }
+        return organizationRegistrationProcessList;
     }
 
 }
