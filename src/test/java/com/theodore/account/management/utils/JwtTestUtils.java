@@ -62,29 +62,4 @@ public class JwtTestUtils {
         return createAuthorizationCodeToken(email, organizationRegNumber, roles);
     }
 
-    /**
-     * Creates an expired JWT token
-     *
-     * @param email User email
-     * @param roles User roles
-     * @return Expired JWT token
-     */
-    public Jwt createExpiredToken(String email, String... roles) {
-        Instant past = Instant.now().minusSeconds(500);
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("username", email);
-        claims.put("roles", List.of(roles));
-        claims.put("scope", String.join(" ", roles));
-
-        return Jwt.withTokenValue("mock-expired-token-" + UUID.randomUUID())
-                .header("alg", "RS256")
-                .header("typ", "JWT")
-                .subject(email)
-                .issuer("test-issuer")
-                .issuedAt(past.minusSeconds(1000))
-                .expiresAt(past)
-                .claims(map -> map.putAll(claims))
-                .build();
-    }
 }

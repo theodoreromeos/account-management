@@ -39,7 +39,8 @@ public class TestDataFeeder {
     public void feedUserProfileTable() {
         userProfileRepository.deleteAll();
         List<UserProfile> userProfileList = List.of(
-                createSimpleUserProfile(TestData.EXISTING_NAME, TestData.EXISTING_SURNAME, TestData.EXISTING_MOBILE)
+                createSimpleUserProfile(TestData.EXISTING_NAME, TestData.EXISTING_SURNAME, TestData.EXISTING_MOBILE),
+                createAdminUserProfile(TestData.SYS_ADMIN_EMAIL, TestData.SYS_ADMIN_NAME, TestData.SYS_ADMIN_SURNAME, TestData.SYS_ADMIN_MOBILE)
         );
         userProfileRepository.saveAll(userProfileList);
     }
@@ -73,6 +74,15 @@ public class TestDataFeeder {
         org.setRegistrationNumber(orgRegNumber);
         org.setCountry(Country.COL);
         return org;
+    }
+
+    private UserProfile createAdminUserProfile(String email, String firstName, String lastName, String mobileNumber) {
+        String id = AccountManagementTestUtils.generateUlId();
+        UserProfile adminProfile = new UserProfile(id, email, mobileNumber);
+        adminProfile.setBirthDate(LocalDate.now());
+        adminProfile.setName(firstName);
+        adminProfile.setSurname(lastName);
+        return adminProfile;
     }
 
 
