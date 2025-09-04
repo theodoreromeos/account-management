@@ -30,6 +30,8 @@ public class OrganizationRegistrationProcessSpecification {
                 predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("registrationNumber"), searchRequest.registrationNumber())));
             }
             switch (searchRequest.status()) {
+                case ALL:
+                    break;
                 case APPROVED:
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get(STATUS), OrganizationRegistrationStatus.APPROVED)));
                     break;
@@ -46,6 +48,5 @@ public class OrganizationRegistrationProcessSpecification {
             return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
     }
-
 
 }
