@@ -4,7 +4,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtTestUtils {
@@ -12,9 +15,9 @@ public class JwtTestUtils {
     /**
      * Creates a JWT token for Authorization Code flow
      *
-     * @param email User email
+     * @param email                 User email
      * @param organizationRegNumber Organization registration number
-     * @param roles List of roles
+     * @param roles                 List of roles
      * @return JWT token
      */
     public Jwt createAuthorizationCodeToken(String email, String organizationRegNumber, String... roles) {

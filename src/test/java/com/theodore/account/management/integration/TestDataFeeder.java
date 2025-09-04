@@ -37,7 +37,6 @@ public class TestDataFeeder {
     }
 
     public void feedUserProfileTable() {
-        userProfileRepository.deleteAll();
         List<UserProfile> userProfileList = List.of(
                 createSimpleUserProfile(TestData.EXISTING_NAME, TestData.EXISTING_SURNAME, TestData.EXISTING_MOBILE),
                 createAdminUserProfile(TestData.SYS_ADMIN_EMAIL, TestData.SYS_ADMIN_NAME, TestData.SYS_ADMIN_SURNAME, TestData.SYS_ADMIN_MOBILE)
@@ -45,17 +44,27 @@ public class TestDataFeeder {
         userProfileRepository.saveAll(userProfileList);
     }
 
+    public void cleanUserProfileTable() {
+        userProfileRepository.deleteAll();
+    }
+
     public void feedOrganizationTable() {
-        organizationRepository.deleteAll();
         List<Organization> userProfileList = List.of(
                 createOrganization(TestData.ORG_NAME, TestData.ORG_REG_NUMBER)
         );
         organizationRepository.saveAll(userProfileList);
     }
 
+    public void cleanOrganizationTable() {
+        organizationRepository.deleteAll();
+    }
+
     public void feedOrganizationRegistrationProcess() {
-        orgRegistrationProcessRepository.deleteAll();
         orgRegistrationProcessRepository.saveAll(createOrganizationRegistrationProcess());
+    }
+
+    public void cleanOrganizationRegistrationProcess() {
+        orgRegistrationProcessRepository.deleteAll();
     }
 
     private UserProfile createSimpleUserProfile(String firstName, String lastName, String mobileNumber) {

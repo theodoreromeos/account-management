@@ -19,10 +19,7 @@ import com.theodore.account.management.utils.AccountManagementTestUtils;
 import com.theodore.account.management.utils.TestData;
 import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -78,21 +75,29 @@ class RegistrationFlowIT extends BasePostgresTest {
 
     WebTestClient client;
 
-    @BeforeEach
+    @BeforeAll
     void initClient() {
         client = WebTestClient.bindToServer().baseUrl(baseUrl()).build();
-        testDataFeeder.feedUserProfileTable();
-
         reset(authServerGrpcClient, messagingService, emailTokenService, sagaCompensationActionService);
+    }
+
+    @BeforeEach
+    void feedUserProfile() {
+        testDataFeeder.feedUserProfileTable();
     }
 
     @Nested
     class RegisterNewSimpleUserTests {
 
         @BeforeEach
-        void setup() {
+        void simpleUserRegistrationSetup() {
             when(emailTokenService.createSimpleUserToken(any(UserProfile.class)))
                     .thenReturn(TEST_TOKEN);
+        }
+
+        @AfterEach
+        void cleanUp() {
+            testDataFeeder.cleanUserProfileTable();
         }
 
         @Test
@@ -373,11 +378,17 @@ class RegistrationFlowIT extends BasePostgresTest {
         private static final String NON_EXISTENT_ORG_NUMBER = "ORG-999999";
 
         @BeforeEach
-        void setup() {
+        void orgUserRegistrationSetup() {
             when(emailTokenService
                     .createOrganizationUserToken(any(Organization.class), anyString(), anyString(), any()))
                     .thenReturn(TEST_TOKEN);
             testDataFeeder.feedOrganizationTable();
+        }
+
+        @AfterEach
+        void cleanUp() {
+            testDataFeeder.cleanUserProfileTable();
+            testDataFeeder.cleanOrganizationTable();
         }
 
         @Test

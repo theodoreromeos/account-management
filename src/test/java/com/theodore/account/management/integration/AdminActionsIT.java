@@ -15,10 +15,7 @@ import com.theodore.account.management.utils.JwtTestUtils;
 import com.theodore.account.management.utils.TestData;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.enums.Country;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
@@ -65,7 +62,7 @@ class AdminActionsIT extends BasePostgresTest {
 
     JwtValidationException expiredException;
 
-    @BeforeEach
+    @BeforeAll
     void initClient() {
         client = WebTestClient.bindToServer().baseUrl(baseUrl()).build();
         validToken = jwtTestUtils.createSimpleUserToken(TestData.SYS_ADMIN_EMAIL, RoleType.SYS_ADMIN.getScopeValue());
@@ -83,6 +80,11 @@ class AdminActionsIT extends BasePostgresTest {
         @BeforeEach
         void initClient() {
             testDataFeeder.feedOrganizationRegistrationProcess();
+        }
+
+        @AfterEach
+        void cleanClient() {
+            testDataFeeder.cleanOrganizationRegistrationProcess();
         }
 
         private static final int DEFAULT_PAGE = 0;
@@ -354,6 +356,11 @@ class AdminActionsIT extends BasePostgresTest {
         void initClient() {
             testDataFeeder.feedUserProfileTable();
             reset(authServerGrpcClient, jwtDecoder, userProfileService);
+        }
+
+        @AfterEach
+        void cleanClient() {
+            testDataFeeder.cleanUserProfileTable();
         }
 
         @Test
