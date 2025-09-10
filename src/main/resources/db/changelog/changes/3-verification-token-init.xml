@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="theodoreromeos">
+        <sql>
+            CREATE TABLE email_verification_token
+            (
+                id         BIGSERIAL PRIMARY KEY,
+                jti        VARCHAR(100),
+                user_id    VARCHAR(100),
+                issued_at  TIMESTAMPTZ NOT NULL,
+                expires_at TIMESTAMPTZ NOT NULL,
+                status     VARCHAR(8)
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS drivers;
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

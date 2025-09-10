@@ -157,8 +157,7 @@ class AdminActionsIT extends BasePostgresTest {
                     , null, null, null);
 
             // when and then
-            client.post()
-                    .uri(uriBuilder -> uriBuilder
+            client.post().uri(uriBuilder -> uriBuilder
                             .path(URL)
                             .queryParam("page", DEFAULT_PAGE)
                             .queryParam("pageSize", DEFAULT_PAGE_SIZE)

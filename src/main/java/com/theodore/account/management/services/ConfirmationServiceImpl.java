@@ -1,14 +1,16 @@
 package com.theodore.account.management.services;
 
+import com.theodore.account.management.entities.EmailVerificationToken;
 import com.theodore.account.management.entities.OrganizationUserRegistrationRequest;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
-import com.theodore.account.management.enums.RegistrationEmailPurpose;
 import com.theodore.account.management.enums.RegistrationStatus;
 import com.theodore.account.management.exceptions.AccountConfirmationException;
 import com.theodore.account.management.exceptions.InvalidStatusException;
+import com.theodore.account.management.exceptions.InvalidTokenException;
 import com.theodore.account.management.models.dto.requests.ConfirmOrgAdminEmailRequestDto;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
+import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
 import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.user.ConfirmationStatus;
@@ -18,20 +20,20 @@ import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ConfirmationServiceImpl implements ConfirmationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
 
-    private static final String PURPOSE = "purpose";
+    private static final String TOKEN_ID = "tid";
     private static final String EMAIL = "email";
+
+    private static final String USER_NOT_FOUND = "User not found";
 
 
     private final EmailTokenService emailTokenService;
@@ -39,35 +41,35 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final MessagingService messagingService;
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
 
     public ConfirmationServiceImpl(EmailTokenService emailTokenService,
                                    UserProfileService userProfileService,
                                    OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
                                    AuthServerGrpcClient authServerGrpcClient,
-                                   MessagingService messagingService) {
+                                   MessagingService messagingService,
+                                   EmailVerificationTokenRepository emailVerificationTokenRepository) {
         this.emailTokenService = emailTokenService;
         this.userProfileService = userProfileService;
         this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
         this.authServerGrpcClient = authServerGrpcClient;
         this.messagingService = messagingService;
+        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
     }
 
     @Override
     public void confirmSimpleUserEmail(String token) {
 
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get(PURPOSE, String.class);
-        if (!RegistrationEmailPurpose.PERSONAL.toString().equals(purpose)) {
-            throw new JwtException("Token mismatch");
-        }
-        String userId = claims.getBody().getSubject();
 
         String email = claims.getBody().get(EMAIL, String.class);
 
-        checkUserProfileDetails(userId, email);
+        var verificationToken = processVerificationToken(claims);
+
+        checkUserProfileDetails(verificationToken.getUserId(), email);
 
         //send to auth server that user is authenticated
-        var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
+        var response = authServerGrpcClient.authServerNewUserConfirmation(verificationToken.getUserId());
         if (!response.getConfirmationStatus().equals(ConfirmationStatus.CONFIRMED)) {
             throw new AccountConfirmationException("Authorization server responded negatively");
         }
@@ -75,6 +77,9 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         var successfulConfirmationEmail = new EmailDto(List.of(email),
                 "User Registration Confirmation Successful",
                 "User Account created successfully");
+
+        markTokenAsUsed(verificationToken);
+
         messagingService.sendToEmailService(successfulConfirmationEmail);
     }
 
@@ -85,14 +90,12 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         LOGGER.trace("confirmOrganizationUserEmail - token: {}", token);
 
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get(PURPOSE, String.class);
-        if (!RegistrationEmailPurpose.ORGANIZATION_USER.toString().equals(purpose)) {
-            throw new JwtException("Token mismatch");
-        }
-        String userId = claims.getBody().getSubject();
+
+        var verificationToken = processVerificationToken(claims);
+
         String email = claims.getBody().get(EMAIL, String.class);
 
-        UserProfile user = checkAndGetUserProfile(userId, email);
+        UserProfile user = checkAndGetUserProfile(verificationToken.getUserId(), email);
 
         OrganizationUserRegistrationRequest registrationRequest = getOrganizationUserRegistrationRequest(email);
 
@@ -121,7 +124,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
             LOGGER.info("SENDING EMAIL TO : {}", adminInfo.email());//todo remove it later
             emailList.add(new EmailDto(List.of(adminInfo.email()), "User Registration Confirmation", link));
         }
-
+        markTokenAsUsed(verificationToken);
     }
 
     @Override
@@ -129,15 +132,14 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     public void confirmOrganizationUserEmailByOrganization(String token) {
 
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get(PURPOSE, String.class);
-        if (!RegistrationEmailPurpose.ORGANIZATION_USER.toString().equals(purpose)) {
-            throw new JwtException("Token mismatch");
-        }
-        String userId = claims.getBody().getSubject();
+
+        var verificationToken = processVerificationToken(claims);
 
         String email = claims.getBody().get(EMAIL, String.class);
 
         String orgRegistrationNumber = claims.getBody().get("organization", String.class);
+
+        String userId = verificationToken.getUserId();
 
         checkOrganizationUserProfile(userId, email, orgRegistrationNumber);
 
@@ -156,6 +158,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
         if (ConfirmationStatus.CONFIRMED.equals(response.getConfirmationStatus())) {
             LOGGER.info("EMAIL {} CONFIRMED", email);
+            markTokenAsUsed(verificationToken);
             // send successful confirmation email - rabbitmq to email service
         } else {
             LOGGER.info("EMAIL {} CONFIRMATION FAILED", email);
@@ -170,24 +173,22 @@ public class ConfirmationServiceImpl implements ConfirmationService {
             throw new IllegalArgumentException("Password mismatch");
         }
         Jws<Claims> claims = emailTokenService.parseToken(token);
-        String purpose = claims.getBody().get(PURPOSE, String.class);
-        if (!RegistrationEmailPurpose.ORGANIZATION_ADMIN.toString().equals(purpose)) {
-            throw new JwtException("Token mismatch - purpose");
-        }
-        String userId = claims.getBody().getSubject();
 
         String email = claims.getBody().get(EMAIL, String.class);
 
-        checkUserProfileDetails(userId, email);
+        var verificationToken = processVerificationToken(claims);
 
-        var response = authServerGrpcClient.confirmAdminAccount(userId, request.oldPassword(), request.newPassword());
+        checkUserProfileDetails(verificationToken.getUserId(), email);
+
+        var response = authServerGrpcClient.confirmAdminAccount(verificationToken.getUserId(), request.oldPassword(), request.newPassword());
         LOGGER.info("response was  : {}", response.getConfirmationStatus());
+        markTokenAsUsed(verificationToken);
     }
 
 
     private void checkUserProfileDetails(String userId, String email) {
         UserProfile user = userProfileService.findUserProfileById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
         if (!user.getEmail().equals(email)) {
             throw new JwtException("Token mismatch - email");
         }
@@ -195,7 +196,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
     private UserProfile checkAndGetUserProfile(String userId, String email) {
         UserProfile user = userProfileService.findUserProfileById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
         if (!user.getEmail().equals(email)) {
             throw new JwtException("Token mismatch - email");
         }
@@ -204,16 +205,16 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
     private void checkOrganizationUserProfile(String userId, String email, String orgRegistrationNumber) {
         UserProfile user = userProfileService.findUserProfileById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
         if (email == null || orgRegistrationNumber == null) {
-            throw new JwtException("email or reg number cannot be null");//todo: better exception
+            throw new InvalidTokenException("e-mail and registration number cannot be null");
         }
         if (!user.getEmail().equals(email)) {
-            throw new JwtException("Token mismatch : email different");//todo: better exception
+            throw new InvalidTokenException("Token email mismatch with database email");
         }
         if (user.getOrganization() == null
                 || !orgRegistrationNumber.equals(user.getOrganization().getRegistrationNumber())) {
-            throw new JwtException("Token mismatch : org registration number different");//todo: better exception
+            throw new InvalidTokenException("Token org registration number different from database org registration number");
         }
     }
 
@@ -223,8 +224,36 @@ public class ConfirmationServiceImpl implements ConfirmationService {
                 .orElseThrow(() -> new NotFoundException("Organization User Registration Request not found"));
     }
 
+    private EmailVerificationToken processVerificationToken(Jws<Claims> claims) {
+        Long tokenId = claims.getBody().get(TOKEN_ID, Long.class);
+        String jti = claims.getBody().getId();
+
+        var verificationToken = emailVerificationTokenRepository.findById(tokenId)
+                .orElseThrow(() -> new NotFoundException("Verification token not found"));
+
+        checkVerificationToken(verificationToken, jti);
+
+        LOGGER.info("Verification token process complete");
+        return verificationToken;
+    }
+
+    private void checkVerificationToken(EmailVerificationToken token, String jti) {
+        LOGGER.info("VERIFYING TOKEN");
+        if (!token.getJti().equals(jti)) {
+            throw new InvalidTokenException("Invalid token id");
+        }
+        if (!token.getStatus().equals(EmailVerificationToken.VerificationStatus.PENDING)) {
+            throw new InvalidTokenException("Invalid token status");
+        }
+    }
+
+    private void markTokenAsUsed(EmailVerificationToken token) {
+        token.setStatus(EmailVerificationToken.VerificationStatus.USED);
+        emailVerificationTokenRepository.save(token);
+    }
+
     private String baseUrl() {//todo remove it
-        return "https://your-domain.com";  // or inject via @Value
+        return "http://localhost";
     }
 
 }
