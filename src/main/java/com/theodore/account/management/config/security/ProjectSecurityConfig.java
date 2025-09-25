@@ -54,17 +54,6 @@ public class ProjectSecurityConfig {
         return http.build();
     }
 
-    @Bean("emailJwtSigningKey")
-    public SecretKey emailJwtSigningKey() {
-        // For HS256; for production, load from Vault or ENV
-        return Keys.secretKeyFor(SignatureAlgorithm.HS256);//TODO
-    }
-
-    @Bean("emailTokenValiditySeconds")
-    public long emailTokenValiditySeconds(@Value("${app.email-token-lifetime-seconds:86400}") long ttl) {
-        return ttl;
-    }
-
     @Bean
     Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter gac = new JwtGrantedAuthoritiesConverter();
