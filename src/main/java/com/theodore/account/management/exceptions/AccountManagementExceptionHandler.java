@@ -97,6 +97,13 @@ public class AccountManagementExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(EmailTokenVerificationFailedException.class)
+    public ResponseEntity<MobilityAppErrorResponse> handleEmailTokenVerificationFailedException(EmailTokenVerificationFailedException ex) {
+        LOGGER.error("{}", ex.getMessage(), ex);
+        MobilityAppErrorResponse error = new MobilityAppErrorResponse(ex.getMessage(), Instant.now());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleRuntimeException(RuntimeException ex) {
         LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);

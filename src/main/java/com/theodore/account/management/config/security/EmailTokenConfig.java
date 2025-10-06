@@ -1,7 +1,6 @@
 package com.theodore.account.management.config.security;
 
 import com.theodore.account.management.utils.EmailVerificationJwtProps;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +21,8 @@ public class EmailTokenConfig {
     }
 
     @Bean("emailTokenValiditySeconds")
-    public long emailTokenValiditySeconds(@Value("${app.email-token-lifetime-seconds:86400}") long ttl) {
-        return ttl;
+    public long emailTokenValiditySeconds(EmailVerificationJwtProps props) {
+        return props.ttl().getSeconds();
     }
 
 }

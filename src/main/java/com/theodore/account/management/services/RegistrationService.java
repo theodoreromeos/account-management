@@ -32,4 +32,11 @@ public interface RegistrationService {
      */
     RegisteredOrganizationResponseDto registerNewOrganizationEntity(CreateNewOrganizationEntityRequestDto newOrganizationRequestDto);
 
+    /**
+     * Resends the email verification token.
+     *
+     * @param email the email address that the token will be sent
+     */
+    void resendEmailVerificationToken(String email);
+
 }
