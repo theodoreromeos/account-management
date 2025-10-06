@@ -1,5 +1,6 @@
 package com.theodore.account.management.services;
 
+import com.theodore.account.management.entities.EmailVerificationToken;
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
@@ -27,6 +28,11 @@ public interface EmailTokenService {
      * with an expiration
      */
     String createOrganizationAdminToken(Organization organization, String userId, String email);
+
+    /**
+     *
+     */
+    String refreshEmailVerificationToken(String userId);
 
     /**
      * Parse and validate. Throws JwtException if invalid/expired.

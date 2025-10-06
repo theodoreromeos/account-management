@@ -3,6 +3,7 @@ package com.theodore.account.management.services;
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.entities.OrganizationUserRegistrationRequest;
+import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
@@ -24,6 +25,8 @@ import java.util.List;
 public class RegistrationServiceImpl implements RegistrationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationServiceImpl.class);
+
+    private static final String USER_NOT_FOUND = "User not found";
 
     private final OrganizationService organizationService;
     private final EmailTokenService emailTokenService;
@@ -239,6 +242,18 @@ public class RegistrationServiceImpl implements RegistrationService {
         organizationRegistrationProcessService.saveOrganizationRegistrationProcess(orgRegistrationProcess);
         // organization registration request successful
         return response;
+    }
+
+    @Override
+    public void resendEmailVerificationToken(String email) {
+        LOGGER.info("Resend email verification token for email : {}", email);
+        UserProfile user = userProfileService.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+
+        var verificationToken = emailTokenService.refreshEmailVerificationToken(user.getId());
+
+
+
     }
 
     private String baseUrl() {//todo remove it

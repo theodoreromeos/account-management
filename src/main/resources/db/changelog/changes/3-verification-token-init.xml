@@ -5,20 +5,21 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="1" author="theodoreromeos">
+    <changeSet id="3" author="theodoreromeos">
         <sql>
             CREATE TABLE email_verification_token
             (
-                id         BIGSERIAL PRIMARY KEY,
-                jti        VARCHAR(100),
-                user_id    VARCHAR(100),
-                issued_at  TIMESTAMPTZ NOT NULL,
-                expires_at TIMESTAMPTZ NOT NULL,
-                status     VARCHAR(8)
+                jti          VARCHAR(100) PRIMARY KEY,
+                user_id      VARCHAR(100) NOT NULL,
+                jwt_token    VARCHAR(400) NOT NULL,
+                last_sent    TIMESTAMPTZ  NOT NULL,
+                times_resent INTEGER      NOT NULL,
+                expires_at   TIMESTAMPTZ  NOT NULL,
+                status       VARCHAR(8)   NOT NULL
             );
         </sql>
         <rollback>
-            DROP TABLE IF EXISTS drivers;
+            DROP TABLE IF EXISTS email_verification_token;
         </rollback>
     </changeSet>
 </databaseChangeLog>

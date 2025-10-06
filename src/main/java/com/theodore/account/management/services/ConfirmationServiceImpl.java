@@ -116,7 +116,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
                 user.getEmail(),
                 AccountConfirmedBy.ORGANIZATION);
 
-        LOGGER.info("ORG USER TOKEN : {}", emailToken);
+        LOGGER.info("ORG USER TOKEN : {}", emailToken);//todo: remove it later
 
         for (OrgAdminInfoResponseDto adminInfo : adminInfoList) {
             String link = String.format("%s/organization/confirm?token=%s", baseUrl(), emailToken);//todo
@@ -225,10 +225,10 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     }
 
     private EmailVerificationToken processVerificationToken(Jws<Claims> claims) {
-        Long tokenId = claims.getBody().get(TOKEN_ID, Long.class);
+        String userId = claims.getBody().getSubject();
         String jti = claims.getBody().getId();
 
-        var verificationToken = emailVerificationTokenRepository.findById(tokenId)
+        var verificationToken = emailVerificationTokenRepository.findByUserIdAndStatusPending(userId)
                 .orElseThrow(() -> new NotFoundException("Verification token not found"));
 
         checkVerificationToken(verificationToken, jti);

@@ -4,8 +4,11 @@ import com.theodore.account.management.entities.EmailVerificationToken;
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
+import com.theodore.account.management.exceptions.EmailTokenVerificationFailedException;
 import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
+import com.theodore.racingmodel.exceptions.NotFoundException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import org.slf4j.Logger;
@@ -16,15 +19,18 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.LinkedHashMap;
 
 @Service
 public class EmailTokenServiceImpl implements EmailTokenService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailTokenServiceImpl.class);
 
+    private static final String TOKEN_NOT_FOUND = "Verification Token not found";
+
     private static final String EMAIL = "email";
-    private static final String TOKEN_ID = "tid";
     private static final String ORG = "organization";
+    private static final String CONFIRMED_BY = "confirmedBy";
 
     private final SecretKey key;
     private final long validitySeconds;
@@ -42,17 +48,22 @@ public class EmailTokenServiceImpl implements EmailTokenService {
     @Override
     public String createSimpleUserToken(UserProfile user) {
         LOGGER.info("Creating token for simple user with email : {} ", user.getEmail());
-        var verificationToken = emailVerificationTokenRepository.save(createVerificationToken(user.getId()));
 
-        return Jwts.builder()
-                .setId(verificationToken.getJti())
+        Instant now = Instant.now();
+        Instant expirationDate = now.plusSeconds(validitySeconds);
+        String jti = java.util.UUID.randomUUID().toString();
+
+        String jwtToken = Jwts.builder()
+                .setId(jti)
                 .setSubject(user.getId())
-                .claim(TOKEN_ID, verificationToken.getId())
                 .claim(EMAIL, user.getEmail())
-                .setIssuedAt(Date.from(verificationToken.getIssuedAt()))
-                .setExpiration(Date.from(verificationToken.getExpiresAt()))
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(expirationDate))
                 .signWith(key)
                 .compact();
+
+        emailVerificationTokenRepository.save(createVerificationToken(user.getId(), jti, jwtToken, expirationDate, 0));
+        return jwtToken;
     }
 
     @Override
@@ -61,20 +72,26 @@ public class EmailTokenServiceImpl implements EmailTokenService {
                                               String email,
                                               AccountConfirmedBy confirmedBy) {
         LOGGER.info("Creating a token for organization user with email : {} and is able to be confirmed by : {}", email, confirmedBy);
-        var verificationToken = emailVerificationTokenRepository.save(createVerificationToken(userId));
 
+        Instant now = Instant.now();
+        Instant expirationDate = now.plusSeconds(validitySeconds);
+        String jti = java.util.UUID.randomUUID().toString();
         String orgRegNumber = organization != null ? organization.getRegistrationNumber() : "";
-        return Jwts.builder()
-                .setId(verificationToken.getJti())
+
+        String jwtToken = Jwts.builder()
+                .setId(jti)
                 .setSubject(userId)
-                .claim(TOKEN_ID, verificationToken.getId())
                 .claim(EMAIL, email)
                 .claim(ORG, orgRegNumber)
-                .claim("confirmedBy", confirmedBy.toString())
-                .setIssuedAt(Date.from(verificationToken.getIssuedAt()))
-                .setExpiration(Date.from(verificationToken.getExpiresAt()))
+                .claim(CONFIRMED_BY, confirmedBy.toString())
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
                 .signWith(key)
                 .compact();
+
+        emailVerificationTokenRepository.save(createVerificationToken(userId, jti, jwtToken, expirationDate, 0));
+
+        return jwtToken;
     }
 
     @Override
@@ -82,19 +99,94 @@ public class EmailTokenServiceImpl implements EmailTokenService {
                                                String userId,
                                                String email) {
         LOGGER.info("Creating token for organization admin with email : {}", email);
-        var verificationToken = emailVerificationTokenRepository.save(createVerificationToken(userId));
+
+        Instant now = Instant.now();
+        Instant expirationDate = now.plusSeconds(validitySeconds);
+        String jti = java.util.UUID.randomUUID().toString();
 
         String orgRegNumber = organization != null ? organization.getRegistrationNumber() : "";
-        return Jwts.builder()
-                .setId(verificationToken.getJti())
+        String jwtToken = Jwts.builder()
+                .setId(jti)
                 .setSubject(userId)
-                .claim(TOKEN_ID, verificationToken.getId())
                 .claim(EMAIL, email)
                 .claim(ORG, orgRegNumber)
-                .setIssuedAt(Date.from(verificationToken.getIssuedAt()))
-                .setExpiration(Date.from(verificationToken.getExpiresAt()))
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
                 .signWith(key)
                 .compact();
+
+        emailVerificationTokenRepository.save(createVerificationToken(userId, jti, jwtToken, expirationDate, 0));
+
+        return jwtToken;
+    }
+
+    @Override
+    public String refreshEmailVerificationToken(String userId) {
+        LOGGER.info("Refreshing email verification jwt token for user : {}", userId);
+        var existingToken = emailVerificationTokenRepository.findByUserIdAndStatusPending(userId)
+                .orElseThrow(() -> new NotFoundException(TOKEN_NOT_FOUND));
+        Integer timesResent = existingToken.getTimesResent();
+
+        checkToken(existingToken);
+        Claims claims = parseTokenEvenIfExpired(existingToken.getJwtToken());
+
+        Date expirationDate = claims.getExpiration();
+
+        if (Instant.now().isAfter(expirationDate.toInstant())) {
+            existingToken.setStatus(EmailVerificationToken.VerificationStatus.REVOKED);
+            emailVerificationTokenRepository.save(existingToken);
+            return issueNewToken(claims, timesResent + 1);
+        }
+
+        existingToken.setTimesResent(timesResent + 1);
+        emailVerificationTokenRepository.save(existingToken);
+        return existingToken.getJwtToken();
+    }
+
+    private String issueNewToken(Claims claims, Integer timesResent) {
+
+        claims.remove(Claims.EXPIRATION);
+        claims.remove(Claims.ISSUED_AT);
+        claims.remove(Claims.NOT_BEFORE);
+
+        String newJti = java.util.UUID.randomUUID().toString();
+
+        claims.put(Claims.ID, newJti);
+
+        Instant now = Instant.now();
+        Instant newExpirationDate = now.plusSeconds(validitySeconds);
+
+        String newToken = Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(newExpirationDate))
+                .signWith(key)
+                .compact();
+
+        String userId = claims.getSubject();
+
+        emailVerificationTokenRepository.save(createVerificationToken(userId, newJti, newToken, newExpirationDate, timesResent));
+
+        return newToken;
+    }
+
+    private void checkToken(EmailVerificationToken token) {
+        if (!EmailVerificationToken.VerificationStatus.PENDING.equals(token.getStatus())
+                || token.getTimesResent() > 10) {
+            throw new EmailTokenVerificationFailedException();
+        }
+    }
+
+    private Claims parseTokenEvenIfExpired(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException ex) {
+            return ex.getClaims();
+        }
     }
 
     @Override
@@ -106,13 +198,16 @@ public class EmailTokenServiceImpl implements EmailTokenService {
                 .parseClaimsJws(token);
     }
 
-    private EmailVerificationToken createVerificationToken(String userId) {
-        Instant now = Instant.now();
+    private EmailVerificationToken createVerificationToken(String userId, String jti,
+                                                           String jwtToken, Instant expirationDate,
+                                                           Integer timesResent) {
         var verificationToken = new EmailVerificationToken();
+        verificationToken.setJti(jti);
         verificationToken.setUserId(userId);
-        verificationToken.setJti(java.util.UUID.randomUUID().toString());
-        verificationToken.setIssuedAt(now);
-        verificationToken.setExpiresAt(now.plusSeconds(validitySeconds));
+        verificationToken.setJwtToken(jwtToken);
+        verificationToken.setLastSent(Instant.now());
+        verificationToken.setExpiresAt(expirationDate);
+        verificationToken.setTimesResent(timesResent);
         return verificationToken;
     }
 

@@ -7,12 +7,10 @@ import com.theodore.account.management.models.dto.responses.RegisteredOrganizati
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
 import com.theodore.account.management.services.RegistrationService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -47,6 +45,12 @@ public class RegistrationController {
         RegisteredOrganizationResponseDto responseDto = registrationService.registerNewOrganizationEntity(newOrganizationRequestDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+    }
+
+    @PostMapping("/resend-token")
+    public ResponseEntity<Void> resendEmailVerification(@RequestParam @NotBlank String email) {
+        registrationService.resendEmailVerificationToken(email);
+        return ResponseEntity.noContent().build();
     }
 
 }
