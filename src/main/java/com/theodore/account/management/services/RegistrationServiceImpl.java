@@ -7,8 +7,10 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
 import com.theodore.account.management.mappers.OrganizationRegistrationProcessMapper;
 import com.theodore.account.management.mappers.UserProfileMapper;
+import com.theodore.account.management.models.RefreshTokenDataModel;
 import com.theodore.account.management.models.UserProfileRegistrationContext;
 import com.theodore.account.management.models.dto.requests.*;
+import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
 import com.theodore.queue.common.emails.EmailDto;
@@ -27,6 +29,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationServiceImpl.class);
 
     private static final String USER_NOT_FOUND = "User not found";
+    private static final String SUBJECT_REG_CONFIRM = "User Registration Confirmation";
 
     private final OrganizationService organizationService;
     private final EmailTokenService emailTokenService;
@@ -104,18 +107,16 @@ public class RegistrationServiceImpl implements RegistrationService {
                             var newUser = userProfileMapper.createSimpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
-                        () -> {
-                            userProfileService.deleteUserProfile(context.getSavedProfile());
-                        }
+                        () -> userProfileService.deleteUserProfile(context.getSavedProfile())
+
                 )
                 .step(
                         () -> {
                             // 3) Send email
                             var token = emailTokenService.createSimpleUserToken(context.getSavedProfile());
                             var link = String.format("%s/simple?token=%s", baseUrl(), token);
-                            var confirmationEmail = new EmailDto(List.of(userEmail), "User Registration Confirmation", link);
+                            var confirmationEmail = new EmailDto(List.of(userEmail), SUBJECT_REG_CONFIRM, link);
                             messagingService.sendToEmailService(confirmationEmail);
-                            LOGGER.trace("THE LINK : {}", link);//todo: remove
                         },
                         () -> {
                         }
@@ -182,9 +183,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                             );
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
-                        () -> {
-                            userProfileService.deleteUserProfile(context.getSavedProfile());
-                        }
+                        () -> userProfileService.deleteUserProfile(context.getSavedProfile())
+
                 )
                 .step(
                         () -> {
@@ -198,9 +198,8 @@ public class RegistrationServiceImpl implements RegistrationService {
 
                             context.setRegistrationRequest(savedRegistrationRequest);
                         },
-                        () -> {
-                            organizationUserRegistrationRequestService.deleteOrganizationUserRegistrationRequest(context.getRegistrationRequest());
-                        }
+                        () -> organizationUserRegistrationRequestService.deleteOrganizationUserRegistrationRequest(context.getRegistrationRequest())
+
                 )
                 .step(
                         () -> {
@@ -211,10 +210,9 @@ public class RegistrationServiceImpl implements RegistrationService {
                                     context.getSavedProfile().getEmail(),
                                     AccountConfirmedBy.USER
                             );
-                            var link = String.format("%s/organization/user?token=%s", baseUrl(), emailToken);//todo
-                            var confirmationEmail = new EmailDto(List.of(userEmail), "User Registration Confirmation", link);
+                            var link = String.format("%s/confirmation/org-user?token=%s", baseUrl(), emailToken);
+                            var confirmationEmail = new EmailDto(List.of(userEmail), SUBJECT_REG_CONFIRM, link);
                             messagingService.sendToEmailService(confirmationEmail);
-                            LOGGER.trace("THE TOKEN : {}", emailToken);//todo: remove
                         },
                         () -> {
                         }
@@ -250,11 +248,49 @@ public class RegistrationServiceImpl implements RegistrationService {
         UserProfile user = userProfileService.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
 
-        var verificationToken = emailTokenService.refreshEmailVerificationToken(user.getId());
-
-
-
+        var refreshToken = emailTokenService.refreshEmailVerificationToken(user.getId());
+        messagingService.sendToEmailService(getEmailData(refreshToken, user));
     }
+
+
+    private EmailDto getEmailData(RefreshTokenDataModel refreshToken, UserProfile user) {
+        var confirmedByOptional = refreshToken.confirmedBy();
+        if (user.getOrganization() == null || user.getOrganization().getRegistrationNumber() == null
+                || confirmedByOptional.isEmpty()) {
+            return emailForUser(refreshToken, user, "simple");
+        }
+
+        AccountConfirmedBy confirmedBy = AccountConfirmedBy
+                .getAccountConfirmedByFromString(confirmedByOptional.get());
+
+        return switch (confirmedBy) {
+            case USER -> emailForUser(refreshToken, user, "confirmation/org-user");
+            case ORGANIZATION -> emailForOrgAdmins(refreshToken, user);
+        };
+    }
+
+    private EmailDto emailForUser(RefreshTokenDataModel refreshToken, UserProfile user, String path) {
+        return new EmailDto(List.of(user.getEmail()), SUBJECT_REG_CONFIRM, buildLink(path, refreshToken.token()));
+    }
+
+    private EmailDto emailForOrgAdmins(RefreshTokenDataModel refreshToken, UserProfile user) {
+        var adminInfos = authServerGrpcClient
+                .getOrganizationAdminInfoFromAuthServer(user.getOrganization().getRegistrationNumber());
+
+        List<String> adminEmails = adminInfos.stream()
+                .map(OrgAdminInfoResponseDto::email)
+                .distinct()
+                .toList();
+
+        var link = buildLink("confirmation/org-user/admin", refreshToken.token());
+
+        return new EmailDto(adminEmails, SUBJECT_REG_CONFIRM, link);
+    }
+
+    private String buildLink(String path, String token) {
+        return String.format("%s/%s?token=%s", baseUrl(), path, token);
+    }
+
 
     private String baseUrl() {//todo remove it
         return "http://localhost/account-management/confirmation";

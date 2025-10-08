@@ -1,9 +1,9 @@
 package com.theodore.account.management.services;
 
-import com.theodore.account.management.entities.EmailVerificationToken;
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
+import com.theodore.account.management.models.RefreshTokenDataModel;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 
@@ -32,7 +32,7 @@ public interface EmailTokenService {
     /**
      *
      */
-    String refreshEmailVerificationToken(String userId);
+    RefreshTokenDataModel refreshEmailVerificationToken(String userId);
 
     /**
      * Parse and validate. Throws JwtException if invalid/expired.

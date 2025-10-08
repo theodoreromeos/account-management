@@ -5,6 +5,7 @@ import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.AccountConfirmedBy;
 import com.theodore.account.management.exceptions.EmailTokenVerificationFailedException;
+import com.theodore.account.management.models.RefreshTokenDataModel;
 import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import io.jsonwebtoken.Claims;
@@ -20,6 +21,7 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 @Service
 public class EmailTokenServiceImpl implements EmailTokenService {
@@ -121,7 +123,7 @@ public class EmailTokenServiceImpl implements EmailTokenService {
     }
 
     @Override
-    public String refreshEmailVerificationToken(String userId) {
+    public RefreshTokenDataModel refreshEmailVerificationToken(String userId) {
         LOGGER.info("Refreshing email verification jwt token for user : {}", userId);
         var existingToken = emailVerificationTokenRepository.findByUserIdAndStatusPending(userId)
                 .orElseThrow(() -> new NotFoundException(TOKEN_NOT_FOUND));
@@ -140,10 +142,11 @@ public class EmailTokenServiceImpl implements EmailTokenService {
 
         existingToken.setTimesResent(timesResent + 1);
         emailVerificationTokenRepository.save(existingToken);
-        return existingToken.getJwtToken();
+
+        return new RefreshTokenDataModel(Optional.of(claims.get(CONFIRMED_BY, String.class)), existingToken.getJwtToken());
     }
 
-    private String issueNewToken(Claims claims, Integer timesResent) {
+    private RefreshTokenDataModel issueNewToken(Claims claims, Integer timesResent) {
 
         claims.remove(Claims.EXPIRATION);
         claims.remove(Claims.ISSUED_AT);
@@ -167,7 +170,7 @@ public class EmailTokenServiceImpl implements EmailTokenService {
 
         emailVerificationTokenRepository.save(createVerificationToken(userId, newJti, newToken, newExpirationDate, timesResent));
 
-        return newToken;
+        return new RefreshTokenDataModel(Optional.of(claims.get(CONFIRMED_BY, String.class)), newToken);
     }
 
     private void checkToken(EmailVerificationToken token) {
