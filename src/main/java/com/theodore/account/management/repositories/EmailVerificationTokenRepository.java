@@ -12,4 +12,6 @@ public interface EmailVerificationTokenRepository extends JpaRepository<EmailVer
             nativeQuery = true)
     Optional<EmailVerificationToken> findByUserIdAndStatusPending(String userId);
 
+    long deleteByStatus(EmailVerificationToken.VerificationStatus status);
+
 }

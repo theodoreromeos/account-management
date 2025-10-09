@@ -12,6 +12,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.Optional;
 
 @Service
@@ -123,6 +123,7 @@ public class EmailTokenServiceImpl implements EmailTokenService {
     }
 
     @Override
+    @Transactional
     public RefreshTokenDataModel refreshEmailVerificationToken(String userId) {
         LOGGER.info("Refreshing email verification jwt token for user : {}", userId);
         var existingToken = emailVerificationTokenRepository.findByUserIdAndStatusPending(userId)
@@ -143,7 +144,23 @@ public class EmailTokenServiceImpl implements EmailTokenService {
         existingToken.setTimesResent(timesResent + 1);
         emailVerificationTokenRepository.save(existingToken);
 
-        return new RefreshTokenDataModel(Optional.of(claims.get(CONFIRMED_BY, String.class)), existingToken.getJwtToken());
+        return new RefreshTokenDataModel(Optional.ofNullable(claims.get(CONFIRMED_BY, String.class)), existingToken.getJwtToken());
+    }
+
+    @Override
+    public Jws<Claims> parseToken(String token) {
+        LOGGER.trace("Parsing token {}", token);
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
+    }
+
+    @Override
+    @Transactional
+    public void cleanUsedVeriricationTokens() {
+        long count = emailVerificationTokenRepository.deleteByStatus(EmailVerificationToken.VerificationStatus.USED);
+        LOGGER.trace("Number of used verification tokens deleted : {}", count);
     }
 
     private RefreshTokenDataModel issueNewToken(Claims claims, Integer timesResent) {
@@ -170,7 +187,7 @@ public class EmailTokenServiceImpl implements EmailTokenService {
 
         emailVerificationTokenRepository.save(createVerificationToken(userId, newJti, newToken, newExpirationDate, timesResent));
 
-        return new RefreshTokenDataModel(Optional.of(claims.get(CONFIRMED_BY, String.class)), newToken);
+        return new RefreshTokenDataModel(Optional.ofNullable(claims.get(CONFIRMED_BY, String.class)), newToken);
     }
 
     private void checkToken(EmailVerificationToken token) {
@@ -190,15 +207,6 @@ public class EmailTokenServiceImpl implements EmailTokenService {
         } catch (ExpiredJwtException ex) {
             return ex.getClaims();
         }
-    }
-
-    @Override
-    public Jws<Claims> parseToken(String token) {
-        LOGGER.trace("Parsing token {}", token);
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
     }
 
     private EmailVerificationToken createVerificationToken(String userId, String jti,

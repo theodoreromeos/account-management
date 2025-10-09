@@ -30,7 +30,12 @@ public interface EmailTokenService {
     String createOrganizationAdminToken(Organization organization, String userId, String email);
 
     /**
+     * Refreshes an email verification token.
+     * If the current token is not expired , the same one is sent.
+     * If the token is expired , a new one is created
      *
+     * @param userId the user's id
+     * @return an object that contains the token and who is going to be confirmed by
      */
     RefreshTokenDataModel refreshEmailVerificationToken(String userId);
 
@@ -39,5 +44,10 @@ public interface EmailTokenService {
      * Returns userId and email.
      */
     Jws<Claims> parseToken(String token);
+
+    /**
+     * Deletes the used email verification tokens.
+     */
+    void cleanUsedVeriricationTokens();
 
 }
