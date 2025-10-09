@@ -2,7 +2,10 @@ package com.theodore.account.management.entities;
 
 import com.theodore.account.management.enums.RegistrationStatus;
 import com.theodore.racingmodel.entities.AuditableUpdateEntity;
+import com.theodore.racingmodel.utils.MobilityUtils;
 import jakarta.persistence.*;
+
+import java.util.Locale;
 
 @Entity
 @Table(name = "registration_request")
@@ -53,4 +56,11 @@ public class OrganizationUserRegistrationRequest extends AuditableUpdateEntity {
     public void setOrganizationRegistrationNumber(String organizationRegistrationNumber) {
         this.organizationRegistrationNumber = organizationRegistrationNumber;
     }
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeEmail() {
+        orgUserEmail = MobilityUtils.normalizeEmail(orgUserEmail);
+    }
+
 }

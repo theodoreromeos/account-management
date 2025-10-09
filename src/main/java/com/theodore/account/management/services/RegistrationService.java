@@ -35,8 +35,8 @@ public interface RegistrationService {
     /**
      * Resends the email verification token.
      *
-     * @param email the email address that the token will be sent
+     * @param emailRequest the email address that the token will be sent
      */
-    void resendEmailVerificationToken(String email);
+    void resendEmailVerificationToken(String emailRequest);
 
 }

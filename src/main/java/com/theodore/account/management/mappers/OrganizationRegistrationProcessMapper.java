@@ -5,6 +5,7 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring",
@@ -26,7 +27,7 @@ public interface OrganizationRegistrationProcessMapper {
     @Mapping(target = "country", source = "newOrganizationRequestDto.country")
     @Mapping(target = "registrationNumber", source = "newOrganizationRequestDto.registrationNumber")
     @Mapping(target = "organizationName", source = "newOrganizationRequestDto.organizationName")
-    @Mapping(target = "orgAdminEmail", source = "newOrganizationRequestDto.organizationAdmin.email")
+    @Mapping(target = "orgAdminEmail", source = "newOrganizationRequestDto.organizationAdmin.email", qualifiedByName = "normalizeEmail")
     @Mapping(target = "orgAdminName", source = "newOrganizationRequestDto.organizationAdmin.name")
     @Mapping(target = "orgAdminSurname", source = "newOrganizationRequestDto.organizationAdmin.surname")
     @Mapping(target = "orgAdminPhone", source = "newOrganizationRequestDto.organizationAdmin.mobileNumber")
@@ -36,5 +37,9 @@ public interface OrganizationRegistrationProcessMapper {
     @Mapping(target = "id", ignore = true)
     OrganizationRegistrationProcess requestDtoToEntity(CreateNewOrganizationEntityRequestDto newOrganizationRequestDto);
 
+    @Named("normalizeEmail")
+    default String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
+    }
 
 }

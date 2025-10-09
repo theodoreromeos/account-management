@@ -17,6 +17,7 @@ import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.racingmodel.entities.modeltypes.RoleType;
 import com.theodore.racingmodel.exceptions.NotFoundException;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
+import com.theodore.racingmodel.utils.MobilityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -68,16 +69,18 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     public RegisteredUserResponseDto registerNewSimpleUser(CreateNewSimpleUserRequestDto userRequestDto) {
 
-        LOGGER.info("Registration process for simple user : {}", userRequestDto.email());
+        String email = MobilityUtils.normalizeEmail(userRequestDto.email());
 
-        if (userProfileService.userProfileExistsByEmailAndMobileNumber(userRequestDto.email(), userRequestDto.mobileNumber())) {
-            return new RegisteredUserResponseDto(userRequestDto.email(), userRequestDto.mobileNumber());
+        LOGGER.info("Registration process for simple user : {}", email);
+
+        if (userProfileService.userProfileExistsByEmailAndMobileNumber(email, userRequestDto.mobileNumber())) {
+            return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
 
         var context = new UserProfileRegistrationContext();
         var sagaOrchestrator = new SagaOrchestrator();
 
-        String userEmail = userRequestDto.email() != null ? userRequestDto.email() : "unknown";
+        String userEmail = email != null ? email : "unknown";
 
         sagaOrchestrator
                 .step(
@@ -131,11 +134,13 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     public RegisteredUserResponseDto registerNewOrganizationUser(CreateNewOrganizationUserRequestDto userRequestDto) {
 
-        LOGGER.info("Registration process for user : {} working for organization : {}", userRequestDto.email(), userRequestDto.organizationRegNumber());
+        String email = MobilityUtils.normalizeEmail(userRequestDto.email());
 
-        if (userProfileService.userProfileExistsByEmailAndMobileNumber(userRequestDto.email(), userRequestDto.mobileNumber())) {
+        LOGGER.info("Registration process for user : {} working for organization : {}", email, userRequestDto.organizationRegNumber());
+
+        if (userProfileService.userProfileExistsByEmailAndMobileNumber(email, userRequestDto.mobileNumber())) {
             // returns the dto normally so that no email can be guessed
-            return new RegisteredUserResponseDto(userRequestDto.email(), userRequestDto.mobileNumber());
+            return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
 
         Organization organization;
@@ -143,13 +148,13 @@ public class RegistrationServiceImpl implements RegistrationService {
             organization = organizationService.findByRegistrationNumber(userRequestDto.organizationRegNumber());
         } catch (NotFoundException e) {
             // returns the dto normally so that no organization registration number can be guessed
-            return new RegisteredUserResponseDto(userRequestDto.email(), userRequestDto.mobileNumber());
+            return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
 
         var context = new UserProfileRegistrationContext();
         var sagaOrchestrator = new SagaOrchestrator();
 
-        String userEmail = userRequestDto.email() != null ? userRequestDto.email() : "unknown";
+        String userEmail = email != null ? email : "unknown";
 
         sagaOrchestrator
                 .step(
@@ -243,7 +248,8 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public void resendEmailVerificationToken(String email) {
+    public void resendEmailVerificationToken(String emailRequest) {
+        String email = MobilityUtils.normalizeEmail(emailRequest);
         LOGGER.info("Resend email verification token for email : {}", email);
         UserProfile user = userProfileService.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
