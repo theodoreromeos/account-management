@@ -6,6 +6,7 @@ import com.theodore.account.management.models.dto.requests.AuthUserManageAccount
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.racingmodel.exceptions.ReferenceMismatchException;
 import com.theodore.racingmodel.saga.SagaOrchestrator;
+import com.theodore.racingmodel.utils.MobilityUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -34,13 +35,16 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     @Override
     public void adminProfileManagement(UserChangeInformationRequestDto requestDto) {
 
-        final Optional<UserProfile> optionalUserProfile = userProfileService.findByEmail(requestDto.getOldEmail());
+        String oldEmail = MobilityUtils.normalizeEmail(requestDto.getOldEmail());
+        String newEmail = MobilityUtils.normalizeEmail(requestDto.getNewEmail());
+
+        final Optional<UserProfile> optionalUserProfile = userProfileService.findByEmail(oldEmail);
         final AtomicReference<String> authUserId = new AtomicReference<>();
 
         String logMsg = "Admin Account Management";
 
-        var authServerAccManageRequest = new AuthUserManageAccountRequestDto(requestDto.getOldEmail(),
-                requestDto.getNewEmail(),
+        var authServerAccManageRequest = new AuthUserManageAccountRequestDto(oldEmail,
+                newEmail,
                 requestDto.getPhoneNumber(),
                 requestDto.getOldPassword(),
                 requestDto.getNewPassword()
@@ -53,7 +57,7 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
                                     "Auth Server User response is null");
                             authUserId.set(authUser.id());
                         },
-                        () -> sagaCompensationActionService.authServerCredentialsRollback(authUserId.get(), requestDto.getNewEmail(), logMsg)
+                        () -> sagaCompensationActionService.authServerCredentialsRollback(authUserId.get(), newEmail, logMsg)
                 )
                 .step(
                         () -> {

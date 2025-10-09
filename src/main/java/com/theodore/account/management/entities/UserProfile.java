@@ -1,6 +1,7 @@
 package com.theodore.account.management.entities;
 
 import com.theodore.racingmodel.entities.AuditableUpdateEntity;
+import com.theodore.racingmodel.utils.MobilityUtils;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -115,4 +116,11 @@ public class UserProfile extends AuditableUpdateEntity {
     public void setOrganization(Organization organization) {
         this.organization = organization;
     }
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeEmail() {
+        email = MobilityUtils.normalizeEmail(email);
+    }
+
 }

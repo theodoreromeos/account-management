@@ -3,6 +3,7 @@ package com.theodore.account.management.entities;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.racingmodel.entities.AuditableUpdateEntity;
 import com.theodore.racingmodel.enums.Country;
+import com.theodore.racingmodel.utils.MobilityUtils;
 import jakarta.persistence.*;
 
 @Entity(name = "organization_registration_process")
@@ -115,4 +116,11 @@ public class OrganizationRegistrationProcess extends AuditableUpdateEntity {
     public void setAdminApprovedStatus(OrganizationRegistrationStatus adminApprovedStatus) {
         this.adminApprovedStatus = adminApprovedStatus;
     }
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeEmail() {
+        orgAdminEmail = MobilityUtils.normalizeEmail(orgAdminEmail);
+    }
+
 }
