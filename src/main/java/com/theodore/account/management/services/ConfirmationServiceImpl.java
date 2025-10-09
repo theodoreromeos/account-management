@@ -116,14 +116,13 @@ public class ConfirmationServiceImpl implements ConfirmationService {
                 user.getEmail(),
                 AccountConfirmedBy.ORGANIZATION);
 
-        LOGGER.info("ORG USER TOKEN : {}", emailToken);//todo: remove it later
-
         for (OrgAdminInfoResponseDto adminInfo : adminInfoList) {
-            String link = String.format("%s/organization/confirm?token=%s", baseUrl(), emailToken);//todo
+            String link = String.format("%s/confirmation/org-user/admn?token=%s", baseUrl(), emailToken);
             //send to email service for the organization to approve
             LOGGER.info("SENDING EMAIL TO : {}", adminInfo.email());//todo remove it later
             emailList.add(new EmailDto(List.of(adminInfo.email()), "User Registration Confirmation", link));
         }
+        //messagingService.sendToEmailService(emailList);//todo
         markTokenAsUsed(verificationToken);
     }
 
