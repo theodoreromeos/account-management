@@ -4,7 +4,7 @@ import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.account.management.models.dto.responses.SearchResponse;
+import com.theodore.racingmodel.models.SearchResponse;
 
 public interface OrganizationRegistrationProcessService {
 

@@ -8,8 +8,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.client.*;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestClient;
 
@@ -30,21 +29,12 @@ public class RestClientConfig {
                 .build();
     }
 
-    @Bean
-    public OAuth2AuthorizedClientManager authorizedClientManager(ClientRegistrationRepository clientRegistrations,
-                                                                 OAuth2AuthorizedClientService clientService) {
-
-        OAuth2AuthorizedClientProvider provider = OAuth2AuthorizedClientProviderBuilder.builder()
-                .clientCredentials()
-                .build();
-
-        AuthorizedClientServiceOAuth2AuthorizedClientManager manager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
-                clientRegistrations, clientService);
-
-        manager.setAuthorizedClientProvider(provider);
-        return manager;
-    }
-
+    /**
+     * SWAGGER
+     * OpenAPI documentation for the application.
+     * Defines the API title, version, and a global Bearer (JWT) authentication scheme,
+     * enabling the "Authorize" button in Swagger UI for authenticated requests.
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";

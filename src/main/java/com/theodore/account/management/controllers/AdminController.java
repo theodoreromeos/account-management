@@ -4,7 +4,7 @@ import com.theodore.account.management.models.dto.requests.OrganizationRegistrat
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.account.management.models.dto.responses.SearchResponse;
+import com.theodore.racingmodel.models.SearchResponse;
 import com.theodore.account.management.services.OrganizationRegistrationProcessService;
 import com.theodore.account.management.services.ProfileManagementService;
 import jakarta.validation.Valid;

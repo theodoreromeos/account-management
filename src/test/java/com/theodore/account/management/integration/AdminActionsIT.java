@@ -5,7 +5,7 @@ import com.theodore.account.management.models.dto.requests.SearchRegistrationPro
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.account.management.models.dto.responses.SearchResponse;
+import com.theodore.racingmodel.models.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.services.AuthServerGrpcClient;
 import com.theodore.account.management.services.SagaCompensationActionService;

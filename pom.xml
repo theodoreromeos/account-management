@@ -160,6 +160,7 @@
             <artifactId>grpc-client-spring-boot-starter</artifactId>
             <version>${grpc.spring.boot.version}</version>
         </dependency>
+
         <!--  proto to json for REST -->
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -257,9 +258,9 @@
             </activation>
         </profile>
         <profile>
-            <id>production</id>
+            <id>prod</id>
             <properties>
-                <spring.profiles.active>production</spring.profiles.active>
+                <spring.profiles.active>prod</spring.profiles.active>
             </properties>
         </profile>
     </profiles>

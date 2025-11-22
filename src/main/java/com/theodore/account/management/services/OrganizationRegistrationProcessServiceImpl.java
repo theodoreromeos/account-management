@@ -13,7 +13,7 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.account.management.models.dto.responses.SearchResponse;
+import com.theodore.racingmodel.models.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.queue.common.emails.EmailDto;
