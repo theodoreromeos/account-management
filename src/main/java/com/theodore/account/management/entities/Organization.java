@@ -1,8 +1,8 @@
 package com.theodore.account.management.entities;
 
-import com.theodore.racingmodel.entities.AuditableUpdateEntity;
-import com.theodore.racingmodel.enums.Country;
-import com.theodore.racingmodel.utils.UlidGenerated;
+import com.theodore.infrastructure.common.entities.AuditableUpdateEntity;
+import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.utils.UlidGenerated;
 import jakarta.persistence.*;
 
 @Entity(name = "organization")

@@ -7,7 +7,7 @@ import com.theodore.account.management.enums.AccountConfirmedBy;
 import com.theodore.account.management.exceptions.EmailTokenVerificationFailedException;
 import com.theodore.account.management.models.RefreshTokenDataModel;
 import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
-import com.theodore.racingmodel.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;

@@ -9,8 +9,8 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
-import com.theodore.racingmodel.enums.Country;
-import com.theodore.racingmodel.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

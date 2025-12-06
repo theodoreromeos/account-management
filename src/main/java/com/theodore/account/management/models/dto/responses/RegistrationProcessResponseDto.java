@@ -1,7 +1,7 @@
 package com.theodore.account.management.models.dto.responses;
 
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
-import com.theodore.racingmodel.enums.Country;
+import com.theodore.infrastructure.common.enums.Country;
 
 public class RegistrationProcessResponseDto {
 

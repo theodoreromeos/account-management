@@ -1,6 +1,6 @@
 package com.theodore.account.management.models.dto.requests;
 
-import com.theodore.racingmodel.utils.StrongPasswordValidator;
+import com.theodore.infrastructure.common.utils.StrongPasswordValidator;
 import jakarta.validation.constraints.NotBlank;
 
 public record CreateNewOrganizationAuthUserRequestDto(@NotBlank String email,

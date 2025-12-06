@@ -1,7 +1,7 @@
 package com.theodore.account.management.exceptions;
 
-import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.racingmodel.models.MobilityAppErrorResponse;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.models.MobilityAppErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;

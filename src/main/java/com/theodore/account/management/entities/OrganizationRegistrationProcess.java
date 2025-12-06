@@ -1,9 +1,9 @@
 package com.theodore.account.management.entities;
 
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
-import com.theodore.racingmodel.entities.AuditableUpdateEntity;
-import com.theodore.racingmodel.enums.Country;
-import com.theodore.racingmodel.utils.MobilityUtils;
+import com.theodore.infrastructure.common.entities.AuditableUpdateEntity;
+import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.utils.MobilityUtils;
 import jakarta.persistence.*;
 
 @Entity(name = "organization_registration_process")

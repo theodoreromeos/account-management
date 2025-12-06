@@ -2,7 +2,7 @@ package com.theodore.account.management.services;
 
 import com.theodore.account.management.entities.Organization;
 import com.theodore.account.management.repositories.OrganizationRepository;
-import com.theodore.racingmodel.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service

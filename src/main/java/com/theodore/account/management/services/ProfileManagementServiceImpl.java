@@ -4,9 +4,9 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
-import com.theodore.racingmodel.exceptions.ReferenceMismatchException;
-import com.theodore.racingmodel.saga.SagaOrchestrator;
-import com.theodore.racingmodel.utils.MobilityUtils;
+import com.theodore.infrastructure.common.exceptions.ReferenceMismatchException;
+import com.theodore.infrastructure.common.saga.SagaOrchestrator;
+import com.theodore.infrastructure.common.utils.MobilityUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

@@ -13,13 +13,13 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.racingmodel.models.SearchResponse;
+import com.theodore.infrastructure.common.models.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.queue.common.emails.EmailDto;
-import com.theodore.racingmodel.entities.modeltypes.RoleType;
-import com.theodore.racingmodel.exceptions.NotFoundException;
-import com.theodore.racingmodel.saga.SagaOrchestrator;
+import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.saga.SagaOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

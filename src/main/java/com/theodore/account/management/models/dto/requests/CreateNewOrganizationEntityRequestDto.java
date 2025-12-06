@@ -1,6 +1,6 @@
 package com.theodore.account.management.models.dto.requests;
 
-import com.theodore.racingmodel.enums.Country;
+import com.theodore.infrastructure.common.enums.Country;
 
 public record CreateNewOrganizationEntityRequestDto(CreateOrganizationAdminRequestDto organizationAdmin,
                                                     String organizationName,

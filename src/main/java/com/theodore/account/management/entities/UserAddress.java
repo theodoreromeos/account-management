@@ -1,6 +1,6 @@
 package com.theodore.account.management.entities;
 
-import com.theodore.racingmodel.enums.Country;
+import com.theodore.infrastructure.common.enums.Country;
 import jakarta.persistence.*;
 
 @Entity

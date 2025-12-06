@@ -1,11 +1,9 @@
 package com.theodore.account.management.entities;
 
 import com.theodore.account.management.enums.RegistrationStatus;
-import com.theodore.racingmodel.entities.AuditableUpdateEntity;
-import com.theodore.racingmodel.utils.MobilityUtils;
+import com.theodore.infrastructure.common.entities.AuditableUpdateEntity;
+import com.theodore.infrastructure.common.utils.MobilityUtils;
 import jakarta.persistence.*;
-
-import java.util.Locale;
 
 @Entity
 @Table(name = "registration_request")

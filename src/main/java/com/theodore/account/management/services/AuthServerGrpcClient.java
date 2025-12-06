@@ -5,7 +5,7 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUserRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
-import com.theodore.racingmodel.entities.modeltypes.RoleType;
+import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.user.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.slf4j.Logger;

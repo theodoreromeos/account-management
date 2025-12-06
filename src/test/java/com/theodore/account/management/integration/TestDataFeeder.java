@@ -10,7 +10,7 @@ import com.theodore.account.management.repositories.OrganizationUserRegistration
 import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.account.management.utils.AccountManagementTestUtils;
 import com.theodore.account.management.utils.TestData;
-import com.theodore.racingmodel.enums.Country;
+import com.theodore.infrastructure.common.enums.Country;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

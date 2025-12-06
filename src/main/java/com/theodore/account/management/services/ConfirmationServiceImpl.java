@@ -12,7 +12,7 @@ import com.theodore.account.management.models.dto.requests.ConfirmOrgAdminEmailR
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
 import com.theodore.queue.common.emails.EmailDto;
-import com.theodore.racingmodel.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.user.ConfirmationStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;

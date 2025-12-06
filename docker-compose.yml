@@ -1,15 +1,15 @@
 services:
   postgres:
     image: postgres:latest
-    container_name: account-management-db
+    container_name: account-management-database
     ports:
       - "4567:5432"
     environment:
       POSTGRES_USER: theodore
       POSTGRES_PASSWORD: theo7272
-      POSTGRES_DB: account-management-db
+      POSTGRES_DB: accounts-db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:

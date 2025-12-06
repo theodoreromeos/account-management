@@ -10,8 +10,8 @@ import com.theodore.account.management.mappers.OrganizationRegistrationProcessMa
 import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
-import com.theodore.racingmodel.enums.Country;
-import com.theodore.racingmodel.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
