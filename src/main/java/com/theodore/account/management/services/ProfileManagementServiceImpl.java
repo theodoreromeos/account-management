@@ -17,6 +17,9 @@ import static java.util.Objects.requireNonNull;
 @Service
 public class ProfileManagementServiceImpl implements ProfileManagementService {
 
+    private static final String SEND_AUTH_USER_ACCOUNT_CHANGES_STEP = "send-auth-user-account-changes";
+    private static final String SAVE_USER_PROFILE_STEP = "save-user-profile";
+
     private final UserProfileService userProfileService;
     private final SagaCompensationActionService sagaCompensationActionService;
     private final UserProfileMapper userProfileMapper;
@@ -51,7 +54,7 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
         );
 
         new SagaOrchestrator()
-                .step(
+                .step(SEND_AUTH_USER_ACCOUNT_CHANGES_STEP,
                         () -> {
                             var authUser = requireNonNull(authServerGrpcClient.manageAuthServerUserAccount(authServerAccManageRequest),
                                     "Auth Server User response is null");
@@ -59,7 +62,7 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
                         },
                         () -> sagaCompensationActionService.authServerCredentialsRollback(authUserId.get(), newEmail, logMsg)
                 )
-                .step(
+                .step(SAVE_USER_PROFILE_STEP,
                         () -> {
                             final var userProfile = optionalUserProfile
                                     .map(userProf -> {

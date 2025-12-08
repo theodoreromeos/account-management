@@ -13,13 +13,13 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.infrastructure.common.models.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
-import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
+import com.theodore.infrastructure.common.models.SearchResponse;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
+import com.theodore.queue.common.emails.EmailDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -34,6 +34,12 @@ import java.util.List;
 public class OrganizationRegistrationProcessServiceImpl implements OrganizationRegistrationProcessService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationRegistrationProcessServiceImpl.class);
+
+    private static final String CREATE_REGISTRATION_PROCESS_STEP = "create-registration-process";
+    private static final String CREATE_ORGANIZATION_STEP = "create-organization";
+    private static final String CREATE_ORGANIZATION_AUTH_USER_STEP = "create-organization-auth-user";
+    private static final String SAVE_USER_PROFILE_STEP = "save-user-profile";
+    private static final String SEND_EMAIL_STEP = "send-to-email-service";
 
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     private final OrganizationService organizationService;
@@ -122,7 +128,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         var sagaOrchestrator = new SagaOrchestrator();
 
         sagaOrchestrator
-                .step(
+                .step(CREATE_REGISTRATION_PROCESS_STEP,
                         () -> {
                             var savedRegistrationProcess = organizationRegistrationProcessRepository.save(registrationProcess);
                             context.setRegistrationProcess(savedRegistrationProcess);
@@ -130,14 +136,14 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                         },
                         () -> organizationRegistrationProcessRepository.delete(context.getRegistrationProcess())
                 )
-                .step(
+                .step(CREATE_ORGANIZATION_STEP,
                         () -> {
                             Organization organization = saveOrganization(context.getRegistrationProcess());
                             context.setOrganization(organization);
                         },
                         () -> organizationService.deleteOrganization(context.getOrganization())
                 )
-                .step(
+                .step(CREATE_ORGANIZATION_AUTH_USER_STEP,
                         () -> {
                             LOGGER.info("CONTEXT password is :{}", context.getTempPassword());
                             var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(
@@ -161,7 +167,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                             }
                         }
                 )
-                .step(
+                .step(SAVE_USER_PROFILE_STEP,
                         () -> {
                             var newUser = saveUserProfile(context.getRegistrationProcess(),
                                     context.getOrganization(),
@@ -172,7 +178,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                         () -> {
                         }
                 )
-                .step(
+                .step(SEND_EMAIL_STEP,
                         () -> {
                             // Send to email service
                             var emailToken = emailTokenService.createOrganizationAdminToken(
@@ -184,7 +190,6 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                             var confirmationEmail = new EmailDto(List.of(context.getSavedProfile().getEmail()),
                                     "Organization Admin Account Confirmation", body);
                             messagingService.sendToEmailService(confirmationEmail);
-                            LOGGER.trace("THE TOKEN : {}", emailToken);//todo: remove
                             LOGGER.info("the password is :{}", context.getTempPassword());//todo remove it
                         },
                         () -> {

@@ -13,11 +13,11 @@ import com.theodore.account.management.models.dto.requests.*;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
-import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
 import com.theodore.infrastructure.common.utils.MobilityUtils;
+import com.theodore.queue.common.emails.EmailDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,6 +31,12 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private static final String USER_NOT_FOUND = "User not found";
     private static final String SUBJECT_REG_CONFIRM = "User Registration Confirmation";
+
+    private static final String CREATE_AUTH_USER_STEP = "create-auth-user";
+    private static final String SAVE_USER_PROFILE_STEP = "save-user-profile";
+    private static final String SAVE_REGISTRATION_REQUEST_STEP = "save-registration-request";
+    private static final String SEND_EMAIL_STEP = "send-to-email-service";
+
 
     private final OrganizationService organizationService;
     private final EmailTokenService emailTokenService;
@@ -83,9 +89,8 @@ public class RegistrationServiceImpl implements RegistrationService {
         String userEmail = email != null ? email : "unknown";
 
         sagaOrchestrator
-                .step(
+                .step(CREATE_AUTH_USER_STEP,
                         () -> {
-                            // 1) Create auth user
                             var authUser = authServerGrpcClient.authServerNewSimpleUserRegistration(
                                     new CreateNewSimpleAuthUserRequestDto(userEmail,
                                             userRequestDto.mobileNumber(),
@@ -104,16 +109,15 @@ public class RegistrationServiceImpl implements RegistrationService {
                             }
                         }
                 )
-                .step(
+                .step(SAVE_USER_PROFILE_STEP,
                         () -> {
-                            // 2) Save user profile
                             var newUser = userProfileMapper.createSimpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
                         () -> userProfileService.deleteUserProfile(context.getSavedProfile())
 
                 )
-                .step(
+                .step(SEND_EMAIL_STEP,
                         () -> {
                             // 3) Send email
                             var token = emailTokenService.createSimpleUserToken(context.getSavedProfile());
@@ -157,7 +161,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         String userEmail = email != null ? email : "unknown";
 
         sagaOrchestrator
-                .step(
+                .step(CREATE_AUTH_USER_STEP,
                         () -> {
                             // 1) Create auth user
                             var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(userEmail,
@@ -179,7 +183,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                             }
                         }
                 )
-                .step(
+                .step(SAVE_USER_PROFILE_STEP,
                         () -> {
                             // 2) Save user profile
                             var newUser = userProfileMapper.createOrganizationUserDtoToUserProfile(context.getAuthUserId(),
@@ -191,9 +195,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                         () -> userProfileService.deleteUserProfile(context.getSavedProfile())
 
                 )
-                .step(
+                .step(SAVE_REGISTRATION_REQUEST_STEP,
                         () -> {
-                            // 3) Save the registration request
                             OrganizationUserRegistrationRequest registrationRequest = new OrganizationUserRegistrationRequest();
                             registrationRequest.setOrganizationRegistrationNumber(organization.getRegistrationNumber());
                             registrationRequest.setOrgUserEmail(userEmail);
@@ -206,9 +209,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                         () -> organizationUserRegistrationRequestService.deleteOrganizationUserRegistrationRequest(context.getRegistrationRequest())
 
                 )
-                .step(
+                .step(SEND_EMAIL_STEP,
                         () -> {
-                            // 4) Send to email service
                             var emailToken = emailTokenService.createOrganizationUserToken(
                                     context.getSavedProfile().getOrganization(),
                                     context.getSavedProfile().getId(),

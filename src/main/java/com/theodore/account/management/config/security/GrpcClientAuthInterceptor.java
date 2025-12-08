@@ -48,7 +48,7 @@ public class GrpcClientAuthInterceptor implements ClientInterceptor {
             throw new IllegalStateException("Could not obtain access token");
         }
 
-        LOGGER.trace("GOT TOKEN DEFINITELY : {}", client.getAccessToken().getTokenValue());
+        LOGGER.trace("GOT TOKEN DEFINITELY");
         return client.getAccessToken().getTokenValue();
     }
 }

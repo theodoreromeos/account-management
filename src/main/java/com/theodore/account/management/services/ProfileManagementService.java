@@ -4,6 +4,9 @@ import com.theodore.account.management.models.dto.requests.UserChangeInformation
 
 public interface ProfileManagementService {
 
+    /**
+     * Manages admin profile changes
+     */
     void adminProfileManagement(UserChangeInformationRequestDto requestDto);
 
 }

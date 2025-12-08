@@ -15,6 +15,9 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface UserProfileMapper {
 
+    /**
+     * Creates a new UserProfile mapped by CreateNewSimpleUserRequestDto and authUserId
+     */
     @Mapping(target = "dateCreated", ignore = true)
     @Mapping(target = "dateUpdated", ignore = true)
     @Mapping(target = "address", ignore = true)
@@ -27,6 +30,9 @@ public interface UserProfileMapper {
     @Mapping(target = "surname", source = "userDto.surname")
     UserProfile createSimpleUserDtoToUserProfile(String authUserId, CreateNewSimpleUserRequestDto userDto);
 
+    /**
+     * Creates a new UserProfile mapped by CreateNewOrganizationUserRequestDto, Organization and authUserId
+     */
     @Mapping(target = "address", ignore = true)
     @Mapping(target = "birthDate", ignore = true)
     @Mapping(target = "id", source = "authUserId")
