@@ -8,7 +8,7 @@ public class AccountManagementTestUtils {
 
     public static long countProfilesByEmailAndMobile(UserProfileRepository userProfileRepository, String email, String mobile) {
         return userProfileRepository.findAll().stream().filter(user ->
-                        email.equals(user.getEmail()) && mobile.equals(user.getMobileNumber()))
+                        email.toLowerCase().equals(user.getEmail()) && mobile.equals(user.getMobileNumber()))
                 .count();
     }
 

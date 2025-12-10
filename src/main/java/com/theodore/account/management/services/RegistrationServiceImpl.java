@@ -13,6 +13,7 @@ import com.theodore.account.management.models.dto.requests.*;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
+import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
@@ -38,7 +39,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private static final String SEND_EMAIL_STEP = "send-to-email-service";
 
 
-    private final OrganizationService organizationService;
+    private final OrganizationRepository organizationRepository;
     private final EmailTokenService emailTokenService;
     private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
     private final AuthServerGrpcClient authServerGrpcClient;
@@ -49,7 +50,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
     private final SagaCompensationActionService sagaCompensationActionService;
 
-    public RegistrationServiceImpl(OrganizationService organizationService,
+    public RegistrationServiceImpl(OrganizationRepository organizationRepository,
                                    EmailTokenService emailTokenService,
                                    OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
                                    AuthServerGrpcClient authServerGrpcClient,
@@ -59,7 +60,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                    OrganizationRegistrationProcessService organizationRegistrationProcessService,
                                    OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                    SagaCompensationActionService sagaCompensationActionService) {
-        this.organizationService = organizationService;
+        this.organizationRepository = organizationRepository;
         this.emailTokenService = emailTokenService;
         this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
         this.authServerGrpcClient = authServerGrpcClient;
@@ -149,7 +150,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         Organization organization;
         try {
-            organization = organizationService.findByRegistrationNumber(userRequestDto.organizationRegNumber());
+            organization = findByRegistrationNumber(userRequestDto.organizationRegNumber());
         } catch (NotFoundException e) {
             // returns the dto normally so that no organization registration number can be guessed
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
@@ -237,7 +238,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         var response = new RegisteredOrganizationResponseDto(newOrganizationRequestDto.organizationName(),
                 newOrganizationRequestDto.registrationNumber());
 
-        if (organizationService.existsByRegistrationNumber(newOrganizationRequestDto.registrationNumber())) {
+        if (organizationRepository.existsByRegistrationNumberIgnoreCase(newOrganizationRequestDto.registrationNumber())) {
             // returns the dto normally so that no organization registration number can be guessed
             return response;
         }
@@ -299,6 +300,10 @@ public class RegistrationServiceImpl implements RegistrationService {
         return String.format("%s/%s?token=%s", baseUrl(), path, token);
     }
 
+    private Organization findByRegistrationNumber(String registrationNumber) {
+        return organizationRepository.findByRegistrationNumberIgnoreCase(registrationNumber)
+                .orElseThrow(() -> new NotFoundException("Organization not found"));
+    }
 
     private String baseUrl() {//todo remove it
         return "http://localhost/account-management/confirmation";

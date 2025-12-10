@@ -34,7 +34,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public Optional<UserProfile> findByEmail(String email) {
-        return userProfileRepository.findByEmail(email);
+        return userProfileRepository.findByEmailIgnoreCase(email);
     }
 
     @Override

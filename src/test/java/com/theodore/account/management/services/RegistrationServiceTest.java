@@ -9,6 +9,7 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
+import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.infrastructure.common.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,7 +45,7 @@ class RegistrationServiceTest {
     private RegistrationServiceImpl registrationService;
 
     @Mock
-    private OrganizationService organizationService;
+    private OrganizationRepository organizationRepository;
     @Mock
     private EmailTokenService emailTokenService;
     @Mock
@@ -167,7 +170,7 @@ class RegistrationServiceTest {
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE))
                     .thenReturn(false);
-            when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER))
+            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER))
                     .thenThrow(new NotFoundException("Organization doesn't exist"));
 
             // when
@@ -178,7 +181,7 @@ class RegistrationServiceTest {
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
-            verify(organizationService, times(1)).findByRegistrationNumber(any());
+            verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(any());
             verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
         }
 
@@ -193,7 +196,7 @@ class RegistrationServiceTest {
             savedProfile.setSurname(USER_SURNAME);
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
-            when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
+            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(Optional.of(ORGANIZATION));
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenReturn(savedProfile);
             when(emailTokenService.createOrganizationUserToken(any(), any(), any(), any())).thenReturn(TOKEN);
@@ -206,7 +209,7 @@ class RegistrationServiceTest {
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(any(), any());
-            verify(organizationService, times(1)).findByRegistrationNumber(any());
+            verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(any());
             verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
             verify(userProfileService, times(1)).saveUserProfile(any());
             verify(emailTokenService, times(1)).createOrganizationUserToken(any(), any(), any(), any());
@@ -220,7 +223,7 @@ class RegistrationServiceTest {
             var dto = new CreateNewOrganizationUserRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME, USER_PASSWORD, ORG_REG_NUMBER);
 
             when(userProfileService.userProfileExistsByEmailAndMobileNumber(USER_EMAIL, USER_PHONE)).thenReturn(false);
-            when(organizationService.findByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(ORGANIZATION);
+            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(Optional.of(ORGANIZATION));
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileService.saveUserProfile(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
 
@@ -257,7 +260,7 @@ class RegistrationServiceTest {
             var adminReqDto = new CreateOrganizationAdminRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME);
             var newOrganizationRequestDto = new CreateNewOrganizationEntityRequestDto(
                     adminReqDto, ORG_NAME, ORG_REG_NUMBER, ORG_COUNTRY, ORG_TYPE);
-            when(organizationService.existsByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(false);
+            when(organizationRepository.existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(false);
 
             // when
             var result = registrationService.registerNewOrganizationEntity(newOrganizationRequestDto);
@@ -267,7 +270,7 @@ class RegistrationServiceTest {
             assertThat(result.organizationName()).isEqualTo(ORG_NAME);
             assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
 
-            verify(organizationService, times(1)).existsByRegistrationNumber(ORG_REG_NUMBER);
+            verify(organizationRepository, times(1)).existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
             verify(organizationRegistrationProcessService, times(1)).saveOrganizationRegistrationProcess(any());
         }
 
@@ -278,7 +281,7 @@ class RegistrationServiceTest {
             var adminReqDto = new CreateOrganizationAdminRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME);
             var newOrganizationRequestDto = new CreateNewOrganizationEntityRequestDto(
                     adminReqDto, ORG_NAME, ORG_REG_NUMBER, ORG_COUNTRY, ORG_TYPE);
-            when(organizationService.existsByRegistrationNumber(ORG_REG_NUMBER)).thenReturn(true);
+            when(organizationRepository.existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(true);
 
             // when
             var result = registrationService.registerNewOrganizationEntity(newOrganizationRequestDto);
@@ -288,7 +291,7 @@ class RegistrationServiceTest {
             assertThat(result.organizationName()).isEqualTo(ORG_NAME);
             assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
 
-            verify(organizationService, times(1)).existsByRegistrationNumber(ORG_REG_NUMBER);
+            verify(organizationRepository, times(1)).existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
             verify(organizationRegistrationProcessService, times(0)).saveOrganizationRegistrationProcess(any());
         }
 

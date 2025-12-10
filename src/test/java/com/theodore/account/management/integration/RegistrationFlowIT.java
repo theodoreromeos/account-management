@@ -53,16 +53,14 @@ class RegistrationFlowIT extends BasePostgresTest {
     @Autowired
     OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     @Autowired
-    OrganizationRepository organizationRepository;
-    @Autowired
     TestDataFeeder testDataFeeder;
 
     @MockitoSpyBean
     UserProfileService userProfileService;
     @MockitoSpyBean
-    OrganizationService organizationService;
-    @MockitoSpyBean
     OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    @MockitoSpyBean
+    OrganizationRepository organizationRepository;
 
     @MockitoBean
     AuthServerGrpcClient authServerGrpcClient;
@@ -91,8 +89,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
         @BeforeEach
         void simpleUserRegistrationSetup() {
-            when(emailTokenService.createSimpleUserToken(any(UserProfile.class)))
-                    .thenReturn(TEST_TOKEN);
+            when(emailTokenService.createSimpleUserToken(any(UserProfile.class))).thenReturn(TEST_TOKEN);
         }
 
         @AfterEach
@@ -133,7 +130,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                     .exchange()
                     .expectStatus().isCreated()
                     .expectBody()
-                    .jsonPath("$.email").isEqualTo(TestData.EXISTING_EMAIL)
+                    .jsonPath("$.email").isEqualTo(TestData.EXISTING_EMAIL.toLowerCase())
                     .jsonPath("$.phoneNumber").isEqualTo(TestData.EXISTING_MOBILE);
 
             long count = AccountManagementTestUtils.countProfilesByEmailAndMobile(userProfileRepository,
@@ -170,15 +167,15 @@ class RegistrationFlowIT extends BasePostgresTest {
 
             // then
             assertThat(response).isNotNull();
-            assertThat(response.getEmail()).isEqualTo(NEW_EMAIL);
+            assertThat(response.getEmail()).isEqualTo(NEW_EMAIL.toLowerCase());
             assertThat(response.getPhoneNumber()).isEqualTo(NEW_MOBILE);
 
             long finalCount = userProfileRepository.count();
             assertThat(finalCount).isEqualTo(initialCount + 1);
 
-            var savedProfile = userProfileRepository.findByEmail(NEW_EMAIL);
+            var savedProfile = userProfileRepository.findByEmailIgnoreCase(NEW_EMAIL);
             assertThat(savedProfile).isPresent();
-            assertThat(savedProfile.get().getEmail()).isEqualTo(NEW_EMAIL);
+            assertThat(savedProfile.get().getEmail()).isEqualTo(NEW_EMAIL.toLowerCase());
             assertThat(savedProfile.get().getMobileNumber()).isEqualTo(NEW_MOBILE);
             assertThat(savedProfile.get().getName()).isEqualTo(NEW_NAME);
             assertThat(savedProfile.get().getSurname()).isEqualTo(NEW_SURNAME);
@@ -186,14 +183,14 @@ class RegistrationFlowIT extends BasePostgresTest {
 
             verify(authServerGrpcClient, times(1))
                     .authServerNewSimpleUserRegistration(argThat(dto ->
-                            dto.email().equals(NEW_EMAIL) &&
+                            dto.email().equals(NEW_EMAIL.toLowerCase()) &&
                                     dto.mobileNumber().equals(NEW_MOBILE) &&
                                     dto.password().equals(PWD)
                     ));
 
             verify(emailTokenService, times(1))
                     .createSimpleUserToken(argThat(profile ->
-                            profile.getEmail().equals(NEW_EMAIL) &&
+                            profile.getEmail().equals(NEW_EMAIL.toLowerCase()) &&
                                     profile.getMobileNumber().equals(NEW_MOBILE)
                     ));
 
@@ -230,7 +227,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
                 verify(authServerGrpcClient, times(1))
                         .authServerNewSimpleUserRegistration(argThat(dto ->
-                                dto.email().equals(NEW_EMAIL) &&
+                                dto.email().equals(NEW_EMAIL.toLowerCase()) &&
                                         dto.mobileNumber().equals(NEW_MOBILE) &&
                                         dto.password().equals(PWD)
                         ));
@@ -276,7 +273,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(userProfileService, times(1))
                         .saveUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Simple user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Simple user registration");
                 verify(emailTokenService, never()).createSimpleUserToken(any());
                 verify(messagingService, never()).sendToEmailService(any());
             }
@@ -317,7 +314,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(messagingService, never()).sendToEmailService(any());
 
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Simple user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Simple user registration");
                 verify(userProfileService, times(1)).deleteUserProfile(any());
             }
 
@@ -358,7 +355,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(messagingService, times(1)).sendToEmailService(any());
 
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Simple user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Simple user registration");
                 verify(userProfileService, times(1)).deleteUserProfile(any());
             }
         }
@@ -403,10 +400,11 @@ class RegistrationFlowIT extends BasePostgresTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .exchange()
-                    .expectStatus().isBadRequest();
+                    .expectStatus()
+                    .isBadRequest();
 
             // then
-            verifyNoInteractions(organizationService);
+            verify(organizationRepository, never()).findByRegistrationNumberIgnoreCase(anyString());
             verifyNoInteractions(authServerGrpcClient);
             verifyNoInteractions(organizationUserRegistrationRequestService);
             verifyNoInteractions(emailTokenService);
@@ -430,11 +428,11 @@ class RegistrationFlowIT extends BasePostgresTest {
                     .exchange()
                     .expectStatus().isCreated()
                     .expectBody()
-                    .jsonPath("$.email").isEqualTo(TestData.EXISTING_EMAIL)
+                    .jsonPath("$.email").isEqualTo(TestData.EXISTING_EMAIL.toLowerCase())
                     .jsonPath("$.phoneNumber").isEqualTo(TestData.EXISTING_MOBILE);
 
             // then
-            verifyNoInteractions(organizationService);
+            verify(organizationRepository, never()).findByRegistrationNumberIgnoreCase(anyString());
             verifyNoInteractions(authServerGrpcClient);
             verifyNoInteractions(organizationUserRegistrationRequestService);
             verifyNoInteractions(emailTokenService);
@@ -457,12 +455,12 @@ class RegistrationFlowIT extends BasePostgresTest {
                     .exchange()
                     .expectStatus().isCreated()
                     .expectBody()
-                    .jsonPath("$.email").isEqualTo(NEW_EMAIL)
+                    .jsonPath("$.email").isEqualTo(NEW_EMAIL.toLowerCase())
                     .jsonPath("$.phoneNumber").isEqualTo(NEW_MOBILE);
 
             // then
-            verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(NEW_EMAIL, NEW_MOBILE);
-            verify(organizationService, times(1)).findByRegistrationNumber(NON_EXISTENT_ORG_NUMBER);
+            verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(NEW_EMAIL.toLowerCase(), NEW_MOBILE);
+            verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(NON_EXISTENT_ORG_NUMBER);
             verifyNoInteractions(authServerGrpcClient);
             verifyNoInteractions(organizationUserRegistrationRequestService);
             verifyNoInteractions(emailTokenService);
@@ -503,24 +501,24 @@ class RegistrationFlowIT extends BasePostgresTest {
 
             // then
             assertThat(response).isNotNull();
-            assertThat(response.getEmail()).isEqualTo(NEW_EMAIL);
+            assertThat(response.getEmail()).isEqualTo(NEW_EMAIL.toLowerCase());
             assertThat(response.getPhoneNumber()).isEqualTo(NEW_MOBILE);
             assertThat(finalCount).isEqualTo(initialCount + 1);
 
-            var savedProfile = userProfileRepository.findByEmail(NEW_EMAIL);
+            var savedProfile = userProfileRepository.findByEmailIgnoreCase(NEW_EMAIL);
             assertThat(savedProfile).isPresent();
-            assertThat(savedProfile.get().getEmail()).isEqualTo(NEW_EMAIL);
+            assertThat(savedProfile.get().getEmail()).isEqualTo(NEW_EMAIL.toLowerCase());
             assertThat(savedProfile.get().getMobileNumber()).isEqualTo(NEW_MOBILE);
             assertThat(savedProfile.get().getName()).isEqualTo(NEW_NAME);
             assertThat(savedProfile.get().getSurname()).isEqualTo(NEW_SURNAME);
             assertThat(savedProfile.get().getId()).isEqualTo(AUTH_USER_ID);
 
-            verify(organizationService, times(1)).findByRegistrationNumber(TestData.ORG_REG_NUMBER);
+            verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(TestData.ORG_REG_NUMBER);
 
             verify(authServerGrpcClient, times(1))
                     .authServerNewOrganizationUserRegistration(
                             argThat(dto ->
-                                    dto.email().equals(NEW_EMAIL) &&
+                                    dto.email().equals(NEW_EMAIL.toLowerCase()) &&
                                             dto.mobileNumber().equals(NEW_MOBILE) &&
                                             dto.password().equals(PWD) &&
                                             dto.organizationRegNumber().equals(TestData.ORG_REG_NUMBER)
@@ -529,12 +527,12 @@ class RegistrationFlowIT extends BasePostgresTest {
                     );
 
             verify(emailTokenService, times(1))
-                    .createOrganizationUserToken(any(), eq(AUTH_USER_ID), eq(NEW_EMAIL), eq(AccountConfirmedBy.USER));
+                    .createOrganizationUserToken(any(), eq(AUTH_USER_ID), eq(NEW_EMAIL.toLowerCase()), eq(AccountConfirmedBy.USER));
 
             verify(organizationUserRegistrationRequestService, times(1))
                     .saveOrganizationUserRegistrationRequest(argThat(req ->
                             TestData.ORG_REG_NUMBER.equals(req.getOrganizationRegistrationNumber()) &&
-                                    NEW_EMAIL.equals(req.getOrgUserEmail())
+                                    NEW_EMAIL.toLowerCase().equals(req.getOrgUserEmail())
                     ));
 
             verify(messagingService, times(1)).sendToEmailService(any(EmailDto.class));
@@ -573,7 +571,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalProfiles).isEqualTo(initialProfiles);
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
-                verify(organizationService, times(1)).findByRegistrationNumber(TestData.ORG_REG_NUMBER);
+                verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(TestData.ORG_REG_NUMBER);
                 verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER));
 
                 verify(userProfileService, never()).saveUserProfile(any());
@@ -620,7 +618,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER));
                 verify(userProfileService, times(1)).saveUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Organization user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 
                 verify(organizationUserRegistrationRequestService, never()).saveOrganizationUserRegistrationRequest(any());
                 verify(emailTokenService, never()).createOrganizationUserToken(any(), anyString(), anyString(), any());
@@ -663,7 +661,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(organizationUserRegistrationRequestService, times(1)).saveOrganizationUserRegistrationRequest(any());
                 verify(userProfileService, times(1)).deleteUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Organization user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 
                 verify(emailTokenService, never()).createOrganizationUserToken(any(), anyString(), anyString(), any());
                 verify(messagingService, never()).sendToEmailService(any());
@@ -681,7 +679,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER)))
                         .thenReturn(authUserResponse);
 
-                when(emailTokenService.createOrganizationUserToken(any(Organization.class), eq(AUTH_USER_ID), eq(NEW_EMAIL), eq(AccountConfirmedBy.USER)))
+                when(emailTokenService.createOrganizationUserToken(any(Organization.class), eq(AUTH_USER_ID), eq(NEW_EMAIL.toLowerCase()), eq(AccountConfirmedBy.USER)))
                         .thenThrow(new RuntimeException("Token generation failed"));
 
                 long initialProfiles = userProfileRepository.count();
@@ -706,7 +704,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                         .deleteOrganizationUserRegistrationRequest(any());
                 verify(userProfileService, times(1)).deleteUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Organization user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 
                 verify(messagingService, never()).sendToEmailService(any());
             }
@@ -748,14 +746,14 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
                 verify(emailTokenService, times(1))
-                        .createOrganizationUserToken(any(Organization.class), eq(AUTH_USER_ID), eq(NEW_EMAIL), eq(AccountConfirmedBy.USER));
+                        .createOrganizationUserToken(any(Organization.class), eq(AUTH_USER_ID), eq(NEW_EMAIL.toLowerCase()), eq(AccountConfirmedBy.USER));
                 verify(messagingService, times(1)).sendToEmailService(any());
 
                 verify(organizationUserRegistrationRequestService, times(1))
                         .deleteOrganizationUserRegistrationRequest(any());
                 verify(userProfileService, times(1)).deleteUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
-                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL, "Organization user registration");
+                        .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
             }
 
 
