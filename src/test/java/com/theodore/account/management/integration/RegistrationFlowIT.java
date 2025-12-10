@@ -9,7 +9,6 @@ import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUs
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
-import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
@@ -17,8 +16,8 @@ import com.theodore.account.management.services.*;
 import com.theodore.account.management.utils.AccountManagementTestConfigs;
 import com.theodore.account.management.utils.AccountManagementTestUtils;
 import com.theodore.account.management.utils.TestData;
-import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
+import com.theodore.queue.common.emails.EmailDto;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -48,8 +47,6 @@ class RegistrationFlowIT extends BasePostgresTest {
 
     @Autowired
     UserProfileRepository userProfileRepository;
-    @Autowired
-    OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     @Autowired
     OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     @Autowired

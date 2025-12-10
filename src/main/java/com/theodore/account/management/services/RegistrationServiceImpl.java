@@ -13,6 +13,7 @@ import com.theodore.account.management.models.dto.requests.*;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
+import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
@@ -46,7 +47,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final MessagingService messagingService;
     private final UserProfileService userProfileService;
     private final UserProfileMapper userProfileMapper;
-    private final OrganizationRegistrationProcessService organizationRegistrationProcessService;
+    private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
     private final SagaCompensationActionService sagaCompensationActionService;
 
@@ -57,7 +58,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                    MessagingService messagingService,
                                    UserProfileService userProfileService,
                                    UserProfileMapper userProfileMapper,
-                                   OrganizationRegistrationProcessService organizationRegistrationProcessService,
+                                   OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                    OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                    SagaCompensationActionService sagaCompensationActionService) {
         this.organizationRepository = organizationRepository;
@@ -67,7 +68,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         this.messagingService = messagingService;
         this.userProfileService = userProfileService;
         this.userProfileMapper = userProfileMapper;
-        this.organizationRegistrationProcessService = organizationRegistrationProcessService;
+        this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
         this.sagaCompensationActionService = sagaCompensationActionService;
     }
@@ -245,7 +246,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         OrganizationRegistrationProcess orgRegistrationProcess = organizationRegistrationProcessMapper
                 .requestDtoToEntity(newOrganizationRequestDto);
 
-        organizationRegistrationProcessService.saveOrganizationRegistrationProcess(orgRegistrationProcess);
+        organizationRegistrationProcessRepository.save(orgRegistrationProcess);
         // organization registration request successful
         return response;
     }
