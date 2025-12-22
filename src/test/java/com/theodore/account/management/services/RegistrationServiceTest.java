@@ -9,6 +9,7 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
+import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.infrastructure.common.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
@@ -57,7 +58,7 @@ class RegistrationServiceTest {
     @Mock
     private UserProfileService userProfileService;
     @Mock
-    private OrganizationRegistrationProcessService organizationRegistrationProcessService;
+    private OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     @Mock
     private SagaCompensationActionService sagaCompensationActionService;
 
@@ -271,7 +272,7 @@ class RegistrationServiceTest {
             assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
 
             verify(organizationRepository, times(1)).existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
-            verify(organizationRegistrationProcessService, times(1)).saveOrganizationRegistrationProcess(any());
+            verify(organizationRegistrationProcessRepository, times(1)).save(any());
         }
 
         @DisplayName("registerNewOrganizationEntity: Skips registration when registration number already exists (negative scenario)")
@@ -292,7 +293,7 @@ class RegistrationServiceTest {
             assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
 
             verify(organizationRepository, times(1)).existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
-            verify(organizationRegistrationProcessService, times(0)).saveOrganizationRegistrationProcess(any());
+            verify(organizationRegistrationProcessRepository, times(0)).save(any());
         }
 
     }
