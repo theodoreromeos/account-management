@@ -11,6 +11,7 @@ import com.theodore.account.management.models.dto.requests.CreateOrganizationAdm
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
+import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.infrastructure.common.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +51,7 @@ class RegistrationServiceTest {
     @Mock
     private EmailTokenService emailTokenService;
     @Mock
-    private OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    private OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     @Mock
     private AuthServerGrpcClient authServerGrpcClient;
     @Mock

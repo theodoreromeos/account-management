@@ -15,6 +15,7 @@ import com.theodore.account.management.models.dto.responses.RegisteredOrganizati
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
+import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
@@ -42,7 +43,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private final OrganizationRepository organizationRepository;
     private final EmailTokenService emailTokenService;
-    private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final MessagingService messagingService;
     private final UserProfileService userProfileService;
@@ -53,7 +54,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     public RegistrationServiceImpl(OrganizationRepository organizationRepository,
                                    EmailTokenService emailTokenService,
-                                   OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
+                                   OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerGrpcClient authServerGrpcClient,
                                    MessagingService messagingService,
                                    UserProfileService userProfileService,
@@ -63,7 +64,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                    SagaCompensationActionService sagaCompensationActionService) {
         this.organizationRepository = organizationRepository;
         this.emailTokenService = emailTokenService;
-        this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
+        this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.authServerGrpcClient = authServerGrpcClient;
         this.messagingService = messagingService;
         this.userProfileService = userProfileService;
@@ -203,12 +204,12 @@ public class RegistrationServiceImpl implements RegistrationService {
                             registrationRequest.setOrganizationRegistrationNumber(organization.getRegistrationNumber());
                             registrationRequest.setOrgUserEmail(userEmail);
 
-                            var savedRegistrationRequest = organizationUserRegistrationRequestService
-                                    .saveOrganizationUserRegistrationRequest(registrationRequest);
+                            var savedRegistrationRequest = organizationUserRegistrationRequestRepository
+                                    .save(registrationRequest);
 
                             context.setRegistrationRequest(savedRegistrationRequest);
                         },
-                        () -> organizationUserRegistrationRequestService.deleteOrganizationUserRegistrationRequest(context.getRegistrationRequest())
+                        () -> organizationUserRegistrationRequestRepository.delete(context.getRegistrationRequest())
 
                 )
                 .step(SEND_EMAIL_STEP,

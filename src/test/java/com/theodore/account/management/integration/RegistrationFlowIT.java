@@ -48,14 +48,12 @@ class RegistrationFlowIT extends BasePostgresTest {
     @Autowired
     UserProfileRepository userProfileRepository;
     @Autowired
-    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
-    @Autowired
     TestDataFeeder testDataFeeder;
 
     @MockitoSpyBean
     UserProfileService userProfileService;
     @MockitoSpyBean
-    OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     @MockitoSpyBean
     OrganizationRepository organizationRepository;
 
@@ -403,7 +401,7 @@ class RegistrationFlowIT extends BasePostgresTest {
             // then
             verify(organizationRepository, never()).findByRegistrationNumberIgnoreCase(anyString());
             verifyNoInteractions(authServerGrpcClient);
-            verifyNoInteractions(organizationUserRegistrationRequestService);
+            verifyNoInteractions(organizationUserRegistrationRequestRepository);
             verifyNoInteractions(emailTokenService);
             verifyNoInteractions(messagingService);
         }
@@ -431,7 +429,7 @@ class RegistrationFlowIT extends BasePostgresTest {
             // then
             verify(organizationRepository, never()).findByRegistrationNumberIgnoreCase(anyString());
             verifyNoInteractions(authServerGrpcClient);
-            verifyNoInteractions(organizationUserRegistrationRequestService);
+            verifyNoInteractions(organizationUserRegistrationRequestRepository);
             verifyNoInteractions(emailTokenService);
             verifyNoInteractions(messagingService);
         }
@@ -459,7 +457,7 @@ class RegistrationFlowIT extends BasePostgresTest {
             verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(NEW_EMAIL.toLowerCase(), NEW_MOBILE);
             verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(NON_EXISTENT_ORG_NUMBER);
             verifyNoInteractions(authServerGrpcClient);
-            verifyNoInteractions(organizationUserRegistrationRequestService);
+            verifyNoInteractions(organizationUserRegistrationRequestRepository);
             verifyNoInteractions(emailTokenService);
             verifyNoInteractions(messagingService);
         }
@@ -526,8 +524,8 @@ class RegistrationFlowIT extends BasePostgresTest {
             verify(emailTokenService, times(1))
                     .createOrganizationUserToken(any(), eq(AUTH_USER_ID), eq(NEW_EMAIL.toLowerCase()), eq(AccountConfirmedBy.USER));
 
-            verify(organizationUserRegistrationRequestService, times(1))
-                    .saveOrganizationUserRegistrationRequest(argThat(req ->
+            verify(organizationUserRegistrationRequestRepository, times(1))
+                    .save(argThat(req ->
                             TestData.ORG_REG_NUMBER.equals(req.getOrganizationRegistrationNumber()) &&
                                     NEW_EMAIL.toLowerCase().equals(req.getOrgUserEmail())
                     ));
@@ -572,7 +570,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER));
 
                 verify(userProfileService, never()).saveUserProfile(any());
-                verify(organizationUserRegistrationRequestService, never()).saveOrganizationUserRegistrationRequest(any());
+                verify(organizationUserRegistrationRequestRepository, never()).save(any());
                 verify(emailTokenService, never()).createOrganizationUserToken(any(), anyString(), anyString(), any());
                 verify(messagingService, never()).sendToEmailService(any());
 
@@ -617,7 +615,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 
-                verify(organizationUserRegistrationRequestService, never()).saveOrganizationUserRegistrationRequest(any());
+                verify(organizationUserRegistrationRequestRepository, never()).save(any());
                 verify(emailTokenService, never()).createOrganizationUserToken(any(), anyString(), anyString(), any());
                 verify(messagingService, never()).sendToEmailService(any());
             }
@@ -635,7 +633,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                         .thenReturn(authUserResponse);
 
                 doThrow(new RuntimeException("request table unavailable"))
-                        .when(organizationUserRegistrationRequestService).saveOrganizationUserRegistrationRequest(any());
+                        .when(organizationUserRegistrationRequestRepository).save(any());
 
                 long initialProfiles = userProfileRepository.count();
                 long initialRequests = organizationUserRegistrationRequestRepository.count();
@@ -655,7 +653,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalProfiles).isEqualTo(initialProfiles);
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
-                verify(organizationUserRegistrationRequestService, times(1)).saveOrganizationUserRegistrationRequest(any());
+                verify(organizationUserRegistrationRequestRepository, times(1)).save(any());
                 verify(userProfileService, times(1)).deleteUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
@@ -697,8 +695,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalProfiles).isEqualTo(initialProfiles);
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
-                verify(organizationUserRegistrationRequestService, times(1))
-                        .deleteOrganizationUserRegistrationRequest(any());
+                verify(organizationUserRegistrationRequestRepository, times(1)).delete(any());
                 verify(userProfileService, times(1)).deleteUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
@@ -746,8 +743,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                         .createOrganizationUserToken(any(Organization.class), eq(AUTH_USER_ID), eq(NEW_EMAIL.toLowerCase()), eq(AccountConfirmedBy.USER));
                 verify(messagingService, times(1)).sendToEmailService(any());
 
-                verify(organizationUserRegistrationRequestService, times(1))
-                        .deleteOrganizationUserRegistrationRequest(any());
+                verify(organizationUserRegistrationRequestRepository, times(1)).delete(any());
                 verify(userProfileService, times(1)).deleteUserProfile(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
