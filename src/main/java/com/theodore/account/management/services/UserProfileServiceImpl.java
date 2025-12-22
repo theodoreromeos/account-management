@@ -28,18 +28,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public Optional<UserProfile> findUserProfileById(String id) {
-        return userProfileRepository.findById(id);
-    }
-
-    @Override
     public Optional<UserProfile> findByEmail(String email) {
         return userProfileRepository.findByEmailIgnoreCase(email);
-    }
-
-    @Override
-    public void deleteUserProfile(UserProfile profile){
-        userProfileRepository.delete(profile);
     }
 
 }

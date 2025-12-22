@@ -16,6 +16,7 @@ import com.theodore.account.management.models.dto.responses.RegisteredUserRespon
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
@@ -47,6 +48,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final AuthServerGrpcClient authServerGrpcClient;
     private final MessagingService messagingService;
     private final UserProfileService userProfileService;
+    private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
@@ -58,6 +60,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                    AuthServerGrpcClient authServerGrpcClient,
                                    MessagingService messagingService,
                                    UserProfileService userProfileService,
+                                   UserProfileRepository userProfileRepository,
                                    UserProfileMapper userProfileMapper,
                                    OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                    OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
@@ -68,6 +71,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         this.authServerGrpcClient = authServerGrpcClient;
         this.messagingService = messagingService;
         this.userProfileService = userProfileService;
+        this.userProfileRepository = userProfileRepository;
         this.userProfileMapper = userProfileMapper;
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
@@ -117,7 +121,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                             var newUser = userProfileMapper.createSimpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
-                        () -> userProfileService.deleteUserProfile(context.getSavedProfile())
+                        () -> userProfileRepository.delete(context.getSavedProfile())
 
                 )
                 .step(SEND_EMAIL_STEP,
@@ -195,7 +199,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                             );
                             context.setSavedProfile(userProfileService.saveUserProfile(newUser));
                         },
-                        () -> userProfileService.deleteUserProfile(context.getSavedProfile())
+                        () -> userProfileRepository.delete(context.getSavedProfile())
 
                 )
                 .step(SAVE_REGISTRATION_REQUEST_STEP,
@@ -256,7 +260,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public void resendEmailVerificationToken(String emailRequest) {
         String email = MobilityUtils.normalizeEmail(emailRequest);
         LOGGER.info("Resend email verification token for email : {}", email);
-        UserProfile user = userProfileService.findByEmail(email)
+        UserProfile user = userProfileRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
 
         var refreshToken = emailTokenService.refreshEmailVerificationToken(user.getId());

@@ -45,7 +45,7 @@ class RegistrationFlowIT extends BasePostgresTest {
     private static final String AUTH_USER_ID = "test-id-123";
     private static final String TEST_TOKEN = "test-token-abc123";
 
-    @Autowired
+    @MockitoSpyBean
     UserProfileRepository userProfileRepository;
     @Autowired
     TestDataFeeder testDataFeeder;
@@ -310,7 +310,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Simple user registration");
-                verify(userProfileService, times(1)).deleteUserProfile(any());
+                verify(userProfileRepository, times(1)).delete(any());
             }
 
             @Test
@@ -351,7 +351,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Simple user registration");
-                verify(userProfileService, times(1)).deleteUserProfile(any());
+                verify(userProfileRepository, times(1)).delete(any());
             }
         }
 
@@ -654,7 +654,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
                 verify(organizationUserRegistrationRequestRepository, times(1)).save(any());
-                verify(userProfileService, times(1)).deleteUserProfile(any());
+                verify(userProfileRepository, times(1)).delete(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 
@@ -696,7 +696,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
                 verify(organizationUserRegistrationRequestRepository, times(1)).delete(any());
-                verify(userProfileService, times(1)).deleteUserProfile(any());
+                verify(userProfileRepository, times(1)).delete(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 
@@ -744,7 +744,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(messagingService, times(1)).sendToEmailService(any());
 
                 verify(organizationUserRegistrationRequestRepository, times(1)).delete(any());
-                verify(userProfileService, times(1)).deleteUserProfile(any());
+                verify(userProfileRepository, times(1)).delete(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
             }
