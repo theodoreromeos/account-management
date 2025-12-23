@@ -11,6 +11,7 @@ import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.OrganizationRegistrationDecisionRequestDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
@@ -54,7 +55,7 @@ class OrganizationRegistrationProcessServiceTest {
     @Mock
     private OrganizationRepository organizationRepository;
     @Mock
-    private UserProfileService userProfileService;
+    private UserProfileRepository userProfileRepository;
     @Mock
     private AuthServerGrpcClient authServerGrpcClient;
     @Mock
@@ -118,7 +119,7 @@ class OrganizationRegistrationProcessServiceTest {
 
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
 
-            when(userProfileService.saveUserProfile(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
+            when(userProfileRepository.save(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
 
             // when
             assertThatThrownBy(() -> organizationRegistrationProcessService.organizationRegistrationDecision(dto))
@@ -128,7 +129,7 @@ class OrganizationRegistrationProcessServiceTest {
             verify(organizationRegistrationProcessRepository, times(1)).save(any());
             verify(organizationRepository, times(1)).save(any());
             verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
-            verify(userProfileService, times(1)).saveUserProfile(any());
+            verify(userProfileRepository, times(1)).save(any());
             verify(sagaCompensationActionService, times(1)).authServerCredentialsRollback(any(), any(), any());
             verify(organizationRepository, times(1)).delete(any());
             verify(organizationRegistrationProcessRepository, times(1)).delete(any(OrganizationRegistrationProcess.class));
@@ -173,7 +174,7 @@ class OrganizationRegistrationProcessServiceTest {
             verify(organizationRepository, times(1)).delete(any());
             verify(organizationRegistrationProcessRepository, times(1))
                     .delete(any(OrganizationRegistrationProcess.class));
-            verifyNoInteractions(userProfileService);
+            verifyNoInteractions(userProfileRepository);
             verifyNoInteractions(sagaCompensationActionService);
         }
 
@@ -194,7 +195,7 @@ class OrganizationRegistrationProcessServiceTest {
             // then
             verify(organizationRegistrationProcessRepository, times(1)).save(any());
             verifyNoInteractions(sagaCompensationActionService);
-            verifyNoInteractions(userProfileService);
+            verifyNoInteractions(userProfileRepository);
         }
 
         @DisplayName("organizationRegistrationDecision: registration approved (positive scenario)")
@@ -219,7 +220,7 @@ class OrganizationRegistrationProcessServiceTest {
 
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
 
-            when(userProfileService.saveUserProfile(any())).thenReturn(newUser);
+            when(userProfileRepository.save(any())).thenReturn(newUser);
 
             // when
             organizationRegistrationProcessService.organizationRegistrationDecision(dto);
@@ -228,7 +229,7 @@ class OrganizationRegistrationProcessServiceTest {
             verify(organizationRegistrationProcessRepository, times(1)).save(any());
             verify(organizationRepository, times(1)).save(any());
             verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
-            verify(userProfileService, times(1)).saveUserProfile(any());
+            verify(userProfileRepository, times(1)).save(any());
             verifyNoInteractions(sagaCompensationActionService);
         }
 

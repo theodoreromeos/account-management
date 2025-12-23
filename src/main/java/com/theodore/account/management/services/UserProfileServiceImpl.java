@@ -27,9 +27,4 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(email, mobileNumber);
     }
 
-    @Override
-    public Optional<UserProfile> findByEmail(String email) {
-        return userProfileRepository.findByEmailIgnoreCase(email);
-    }
-
 }

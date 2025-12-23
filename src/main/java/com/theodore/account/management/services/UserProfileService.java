@@ -10,6 +10,4 @@ public interface UserProfileService {
 
     boolean userProfileExistsByEmailAndMobileNumber(String email, String mobileNumber);
 
-    Optional<UserProfile> findByEmail(String email);
-
 }

@@ -15,6 +15,7 @@ import com.theodore.account.management.models.dto.requests.SearchRegistrationPro
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
@@ -44,7 +45,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
 
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     private final OrganizationRepository organizationRepository;
-    private final UserProfileService userProfileService;
+    private final UserProfileRepository userProfileRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
     private final UserProfileMapper userProfileMapper;
@@ -55,7 +56,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
 
     public OrganizationRegistrationProcessServiceImpl(OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                                       OrganizationRepository organizationRepository,
-                                                      UserProfileService userProfileService,
+                                                      UserProfileRepository userProfileRepository,
                                                       AuthServerGrpcClient authServerGrpcClient,
                                                       OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                                       UserProfileMapper userProfileMapper,
@@ -65,7 +66,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                                                       MessagingService messagingService) {
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationRepository = organizationRepository;
-        this.userProfileService = userProfileService;
+        this.userProfileRepository = userProfileRepository;
         this.authServerGrpcClient = authServerGrpcClient;
         this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
         this.userProfileMapper = userProfileMapper;
@@ -202,7 +203,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
 
     private UserProfile saveUserProfile(OrganizationRegistrationProcess registrationProcess, Organization organization, String userAuthId) {
         UserProfile userProfile = userProfileMapper.orgRegistrationProcessToUserProfile(registrationProcess, organization, userAuthId);
-        return userProfileService.saveUserProfile(userProfile);
+        return userProfileRepository.save(userProfile);
     }
 
     private Organization saveOrganization(OrganizationRegistrationProcess registrationProcess) {
