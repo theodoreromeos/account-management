@@ -5,16 +5,16 @@ import com.theodore.account.management.models.dto.requests.SearchRegistrationPro
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
-import com.theodore.infrastructure.common.models.SearchResponse;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.account.management.services.AuthServerGrpcClient;
 import com.theodore.account.management.services.SagaCompensationActionService;
-import com.theodore.account.management.services.UserProfileService;
 import com.theodore.account.management.utils.AccountManagementTestConfigs;
 import com.theodore.account.management.utils.JwtTestUtils;
 import com.theodore.account.management.utils.TestData;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.models.SearchResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -53,7 +53,7 @@ class AdminActionsIT extends BasePostgresTest {
     SagaCompensationActionService sagaCompensationActionService;
 
     @MockitoSpyBean
-    UserProfileService userProfileService;
+    UserProfileRepository userProfileRepository;
 
     WebTestClient client;
 
@@ -354,7 +354,7 @@ class AdminActionsIT extends BasePostgresTest {
         @BeforeEach
         void initClient() {
             testDataFeeder.feedUserProfileTable();
-            reset(authServerGrpcClient, jwtDecoder, userProfileService);
+            reset(authServerGrpcClient, jwtDecoder, userProfileRepository);
         }
 
         @AfterEach
@@ -404,7 +404,7 @@ class AdminActionsIT extends BasePostgresTest {
         @DisplayName("adminProfileManagement: update successful with valid data (positive scenario)")
         void givenValidData_whenManagingAdminProfile_returnOk() {
             // given
-            var userProfile = userProfileService.findByEmail(TestData.SYS_ADMIN_EMAIL).orElse(null);
+            var userProfile = userProfileRepository.findByEmailIgnoreCase(TestData.SYS_ADMIN_EMAIL).orElse(null);
             assertThat(userProfile).isNotNull();
 
             when(jwtDecoder.decode(anyString())).thenReturn(validToken);
@@ -423,7 +423,7 @@ class AdminActionsIT extends BasePostgresTest {
                     .expectStatus().isOk();
 
             // then
-            var updatedUserProfile = userProfileService.findByEmail(TestData.NEW_EMAIL).orElse(null);
+            var updatedUserProfile = userProfileRepository.findByEmailIgnoreCase(TestData.NEW_EMAIL).orElse(null);
             assertThat(updatedUserProfile).isNotNull();
             assertThat(updatedUserProfile.getEmail()).isEqualTo(TestData.NEW_EMAIL);
             assertThat(updatedUserProfile.getMobileNumber()).isEqualTo(TestData.NEW_MOBILE);
@@ -431,7 +431,7 @@ class AdminActionsIT extends BasePostgresTest {
             assertThat(updatedUserProfile.getSurname()).isEqualTo(TestData.NEW_SURNAME);
 
             verify(authServerGrpcClient, times(1)).manageAuthServerUserAccount(any());
-            verify(userProfileService, times(1)).saveUserProfile(any());
+            verify(userProfileRepository, times(1)).save(any());
             verifyNoInteractions(sagaCompensationActionService);
         }
 

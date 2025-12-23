@@ -9,6 +9,7 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, String
 
     boolean existsByEmailAndMobileNumberAllIgnoreCase(String email, String mobileNumber);
 
-    Optional<UserProfile> findByEmail(String email);
+    Optional<UserProfile> findByEmailIgnoreCase(String email);
+
 
 }

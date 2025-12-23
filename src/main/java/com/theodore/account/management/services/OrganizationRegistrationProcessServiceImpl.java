@@ -14,6 +14,8 @@ import com.theodore.account.management.models.dto.requests.OrganizationRegistrat
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
+import com.theodore.account.management.repositories.OrganizationRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.account.management.utils.SecurePasswordGenerator;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
@@ -42,8 +44,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     private static final String SEND_EMAIL_STEP = "send-to-email-service";
 
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
-    private final OrganizationService organizationService;
-    private final UserProfileService userProfileService;
+    private final OrganizationRepository organizationRepository;
+    private final UserProfileRepository userProfileRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
     private final UserProfileMapper userProfileMapper;
@@ -53,8 +55,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
     private final MessagingService messagingService;
 
     public OrganizationRegistrationProcessServiceImpl(OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
-                                                      OrganizationService organizationService,
-                                                      UserProfileService userProfileService,
+                                                      OrganizationRepository organizationRepository,
+                                                      UserProfileRepository userProfileRepository,
                                                       AuthServerGrpcClient authServerGrpcClient,
                                                       OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                                       UserProfileMapper userProfileMapper,
@@ -63,8 +65,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                                                       EmailTokenService emailTokenService,
                                                       MessagingService messagingService) {
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
-        this.organizationService = organizationService;
-        this.userProfileService = userProfileService;
+        this.organizationRepository = organizationRepository;
+        this.userProfileRepository = userProfileRepository;
         this.authServerGrpcClient = authServerGrpcClient;
         this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
         this.userProfileMapper = userProfileMapper;
@@ -141,7 +143,7 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                             Organization organization = saveOrganization(context.getRegistrationProcess());
                             context.setOrganization(organization);
                         },
-                        () -> organizationService.deleteOrganization(context.getOrganization())
+                        () -> organizationRepository.delete(context.getOrganization())
                 )
                 .step(CREATE_ORGANIZATION_AUTH_USER_STEP,
                         () -> {
@@ -201,12 +203,12 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
 
     private UserProfile saveUserProfile(OrganizationRegistrationProcess registrationProcess, Organization organization, String userAuthId) {
         UserProfile userProfile = userProfileMapper.orgRegistrationProcessToUserProfile(registrationProcess, organization, userAuthId);
-        return userProfileService.saveUserProfile(userProfile);
+        return userProfileRepository.save(userProfile);
     }
 
     private Organization saveOrganization(OrganizationRegistrationProcess registrationProcess) {
         Organization organization = organizationMapper.orgRegistrationProcessToOrganization(registrationProcess);
-        return organizationService.saveOrganization(organization);
+        return organizationRepository.save(organization);
     }
 
 }

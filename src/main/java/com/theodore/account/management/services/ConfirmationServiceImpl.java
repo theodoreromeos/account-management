@@ -11,8 +11,10 @@ import com.theodore.account.management.exceptions.InvalidTokenException;
 import com.theodore.account.management.models.dto.requests.ConfirmOrgAdminEmailRequestDto;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
-import com.theodore.queue.common.emails.EmailDto;
+import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
+import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.user.ConfirmationStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -30,28 +32,26 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
 
-    private static final String TOKEN_ID = "tid";
     private static final String EMAIL = "email";
 
     private static final String USER_NOT_FOUND = "User not found";
 
-
     private final EmailTokenService emailTokenService;
-    private final UserProfileService userProfileService;
-    private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    private final UserProfileRepository userProfileRepository;
+    private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final MessagingService messagingService;
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
 
     public ConfirmationServiceImpl(EmailTokenService emailTokenService,
-                                   UserProfileService userProfileService,
-                                   OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
+                                   UserProfileRepository userProfileRepository,
+                                   OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerGrpcClient authServerGrpcClient,
                                    MessagingService messagingService,
                                    EmailVerificationTokenRepository emailVerificationTokenRepository) {
         this.emailTokenService = emailTokenService;
-        this.userProfileService = userProfileService;
-        this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
+        this.userProfileRepository = userProfileRepository;
+        this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.authServerGrpcClient = authServerGrpcClient;
         this.messagingService = messagingService;
         this.emailVerificationTokenRepository = emailVerificationTokenRepository;
@@ -104,7 +104,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         }
         registrationRequest.setStatus(RegistrationStatus.PENDING_COMPANY);
 
-        organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
+        organizationUserRegistrationRequestRepository.save(registrationRequest);
 
         var adminInfoList = authServerGrpcClient
                 .getOrganizationAdminInfoFromAuthServer(registrationRequest.getOrganizationRegistrationNumber());
@@ -150,7 +150,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
         registrationRequest.setStatus(RegistrationStatus.APPROVED);
 
-        organizationUserRegistrationRequestService.saveOrganizationUserRegistrationRequest(registrationRequest);
+        organizationUserRegistrationRequestRepository.save(registrationRequest);
 
         //send to auth server that user is authenticated
         var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
@@ -161,7 +161,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
             // send successful confirmation email - rabbitmq to email service
         } else {
             LOGGER.info("EMAIL {} CONFIRMATION FAILED", email);
-            // throw exception
+            // todo:throw exception?
         }
     }
 
@@ -186,16 +186,14 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
 
     private void checkUserProfileDetails(String userId, String email) {
-        UserProfile user = userProfileService.findUserProfileById(userId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+        UserProfile user = findUserProfileById(userId);
         if (!user.getEmail().equals(email)) {
             throw new JwtException("Token mismatch - email");
         }
     }
 
     private UserProfile checkAndGetUserProfile(String userId, String email) {
-        UserProfile user = userProfileService.findUserProfileById(userId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+        UserProfile user = findUserProfileById(userId);
         if (!user.getEmail().equals(email)) {
             throw new JwtException("Token mismatch - email");
         }
@@ -203,8 +201,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     }
 
     private void checkOrganizationUserProfile(String userId, String email, String orgRegistrationNumber) {
-        UserProfile user = userProfileService.findUserProfileById(userId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+        UserProfile user = findUserProfileById(userId);
         if (email == null || orgRegistrationNumber == null) {
             throw new InvalidTokenException("e-mail and registration number cannot be null");
         }
@@ -218,8 +215,8 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     }
 
     private OrganizationUserRegistrationRequest getOrganizationUserRegistrationRequest(String email) {
-        return organizationUserRegistrationRequestService
-                .findByOrganizationUserEmail(email)
+        return organizationUserRegistrationRequestRepository
+                .findByOrgUserEmail(email)
                 .orElseThrow(() -> new NotFoundException("Organization User Registration Request not found"));
     }
 
@@ -249,6 +246,10 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     private void markTokenAsUsed(EmailVerificationToken token) {
         token.setStatus(EmailVerificationToken.VerificationStatus.USED);
         emailVerificationTokenRepository.save(token);
+    }
+
+    private UserProfile findUserProfileById(String userId) {
+        return userProfileRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
     }
 
     private String baseUrl() {//todo remove it

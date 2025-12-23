@@ -13,6 +13,10 @@ import com.theodore.account.management.models.dto.requests.*;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredOrganizationResponseDto;
 import com.theodore.account.management.models.dto.responses.RegisteredUserResponseDto;
+import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
+import com.theodore.account.management.repositories.OrganizationRepository;
+import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
+import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
@@ -38,35 +42,35 @@ public class RegistrationServiceImpl implements RegistrationService {
     private static final String SEND_EMAIL_STEP = "send-to-email-service";
 
 
-    private final OrganizationService organizationService;
+    private final OrganizationRepository organizationRepository;
     private final EmailTokenService emailTokenService;
-    private final OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService;
+    private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final MessagingService messagingService;
-    private final UserProfileService userProfileService;
+    private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
-    private final OrganizationRegistrationProcessService organizationRegistrationProcessService;
+    private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     private final OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper;
     private final SagaCompensationActionService sagaCompensationActionService;
 
-    public RegistrationServiceImpl(OrganizationService organizationService,
+    public RegistrationServiceImpl(OrganizationRepository organizationRepository,
                                    EmailTokenService emailTokenService,
-                                   OrganizationUserRegistrationRequestService organizationUserRegistrationRequestService,
+                                   OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerGrpcClient authServerGrpcClient,
                                    MessagingService messagingService,
-                                   UserProfileService userProfileService,
+                                   UserProfileRepository userProfileRepository,
                                    UserProfileMapper userProfileMapper,
-                                   OrganizationRegistrationProcessService organizationRegistrationProcessService,
+                                   OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                    OrganizationRegistrationProcessMapper organizationRegistrationProcessMapper,
                                    SagaCompensationActionService sagaCompensationActionService) {
-        this.organizationService = organizationService;
+        this.organizationRepository = organizationRepository;
         this.emailTokenService = emailTokenService;
-        this.organizationUserRegistrationRequestService = organizationUserRegistrationRequestService;
+        this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.authServerGrpcClient = authServerGrpcClient;
         this.messagingService = messagingService;
-        this.userProfileService = userProfileService;
+        this.userProfileRepository = userProfileRepository;
         this.userProfileMapper = userProfileMapper;
-        this.organizationRegistrationProcessService = organizationRegistrationProcessService;
+        this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
         this.organizationRegistrationProcessMapper = organizationRegistrationProcessMapper;
         this.sagaCompensationActionService = sagaCompensationActionService;
     }
@@ -79,7 +83,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         LOGGER.info("Registration process for simple user : {}", email);
 
-        if (userProfileService.userProfileExistsByEmailAndMobileNumber(email, userRequestDto.mobileNumber())) {
+        if (userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(email, userRequestDto.mobileNumber())) {
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
 
@@ -112,9 +116,9 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(SAVE_USER_PROFILE_STEP,
                         () -> {
                             var newUser = userProfileMapper.createSimpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
-                            context.setSavedProfile(userProfileService.saveUserProfile(newUser));
+                            context.setSavedProfile(userProfileRepository.save(newUser));
                         },
-                        () -> userProfileService.deleteUserProfile(context.getSavedProfile())
+                        () -> userProfileRepository.delete(context.getSavedProfile())
 
                 )
                 .step(SEND_EMAIL_STEP,
@@ -142,14 +146,14 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         LOGGER.info("Registration process for user : {} working for organization : {}", email, userRequestDto.organizationRegNumber());
 
-        if (userProfileService.userProfileExistsByEmailAndMobileNumber(email, userRequestDto.mobileNumber())) {
+        if (userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(email, userRequestDto.mobileNumber())) {
             // returns the dto normally so that no email can be guessed
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
 
         Organization organization;
         try {
-            organization = organizationService.findByRegistrationNumber(userRequestDto.organizationRegNumber());
+            organization = findByRegistrationNumber(userRequestDto.organizationRegNumber());
         } catch (NotFoundException e) {
             // returns the dto normally so that no organization registration number can be guessed
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
@@ -190,9 +194,9 @@ public class RegistrationServiceImpl implements RegistrationService {
                                     userRequestDto,
                                     organization
                             );
-                            context.setSavedProfile(userProfileService.saveUserProfile(newUser));
+                            context.setSavedProfile(userProfileRepository.save(newUser));
                         },
-                        () -> userProfileService.deleteUserProfile(context.getSavedProfile())
+                        () -> userProfileRepository.delete(context.getSavedProfile())
 
                 )
                 .step(SAVE_REGISTRATION_REQUEST_STEP,
@@ -201,12 +205,12 @@ public class RegistrationServiceImpl implements RegistrationService {
                             registrationRequest.setOrganizationRegistrationNumber(organization.getRegistrationNumber());
                             registrationRequest.setOrgUserEmail(userEmail);
 
-                            var savedRegistrationRequest = organizationUserRegistrationRequestService
-                                    .saveOrganizationUserRegistrationRequest(registrationRequest);
+                            var savedRegistrationRequest = organizationUserRegistrationRequestRepository
+                                    .save(registrationRequest);
 
                             context.setRegistrationRequest(savedRegistrationRequest);
                         },
-                        () -> organizationUserRegistrationRequestService.deleteOrganizationUserRegistrationRequest(context.getRegistrationRequest())
+                        () -> organizationUserRegistrationRequestRepository.delete(context.getRegistrationRequest())
 
                 )
                 .step(SEND_EMAIL_STEP,
@@ -237,14 +241,14 @@ public class RegistrationServiceImpl implements RegistrationService {
         var response = new RegisteredOrganizationResponseDto(newOrganizationRequestDto.organizationName(),
                 newOrganizationRequestDto.registrationNumber());
 
-        if (organizationService.existsByRegistrationNumber(newOrganizationRequestDto.registrationNumber())) {
+        if (organizationRepository.existsByRegistrationNumberIgnoreCase(newOrganizationRequestDto.registrationNumber())) {
             // returns the dto normally so that no organization registration number can be guessed
             return response;
         }
         OrganizationRegistrationProcess orgRegistrationProcess = organizationRegistrationProcessMapper
                 .requestDtoToEntity(newOrganizationRequestDto);
 
-        organizationRegistrationProcessService.saveOrganizationRegistrationProcess(orgRegistrationProcess);
+        organizationRegistrationProcessRepository.save(orgRegistrationProcess);
         // organization registration request successful
         return response;
     }
@@ -253,7 +257,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public void resendEmailVerificationToken(String emailRequest) {
         String email = MobilityUtils.normalizeEmail(emailRequest);
         LOGGER.info("Resend email verification token for email : {}", email);
-        UserProfile user = userProfileService.findByEmail(email)
+        UserProfile user = userProfileRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
 
         var refreshToken = emailTokenService.refreshEmailVerificationToken(user.getId());
@@ -299,6 +303,10 @@ public class RegistrationServiceImpl implements RegistrationService {
         return String.format("%s/%s?token=%s", baseUrl(), path, token);
     }
 
+    private Organization findByRegistrationNumber(String registrationNumber) {
+        return organizationRepository.findByRegistrationNumberIgnoreCase(registrationNumber)
+                .orElseThrow(() -> new NotFoundException("Organization not found"));
+    }
 
     private String baseUrl() {//todo remove it
         return "http://localhost/account-management/confirmation";
