@@ -12,7 +12,10 @@ import com.theodore.account.management.models.dto.responses.RegisteredUserRespon
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
-import com.theodore.account.management.services.*;
+import com.theodore.account.management.services.AuthServerGrpcClient;
+import com.theodore.account.management.services.EmailTokenService;
+import com.theodore.account.management.services.MessagingService;
+import com.theodore.account.management.services.SagaCompensationActionService;
 import com.theodore.account.management.utils.AccountManagementTestConfigs;
 import com.theodore.account.management.utils.AccountManagementTestUtils;
 import com.theodore.account.management.utils.TestData;
@@ -45,13 +48,11 @@ class RegistrationFlowIT extends BasePostgresTest {
     private static final String AUTH_USER_ID = "test-id-123";
     private static final String TEST_TOKEN = "test-token-abc123";
 
-    @MockitoSpyBean
-    UserProfileRepository userProfileRepository;
     @Autowired
     TestDataFeeder testDataFeeder;
 
     @MockitoSpyBean
-    UserProfileService userProfileService;
+    UserProfileRepository userProfileRepository;
     @MockitoSpyBean
     OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     @MockitoSpyBean
@@ -227,7 +228,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                                         dto.password().equals(PWD)
                         ));
 
-                verify(userProfileService, never()).saveUserProfile(any());
+                verify(userProfileRepository, never()).save(any());
                 verify(emailTokenService, never()).createSimpleUserToken(any());
                 verify(messagingService, never()).sendToEmailService(any());
 
@@ -245,8 +246,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                         .thenReturn(authUserResponse);
 
                 // EXCEPTION WHEN SAVING USER PROFILE
-                doThrow(new DataIntegrityViolationException("DB IS DED"))
-                        .when(userProfileService).saveUserProfile(any(UserProfile.class));
+                doThrow(new DataIntegrityViolationException("DB IS DED")).when(userProfileRepository).save(any(UserProfile.class));
 
                 long initialCount = userProfileRepository.count();
 
@@ -265,8 +265,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
                 verify(authServerGrpcClient, times(1))
                         .authServerNewSimpleUserRegistration(any());
-                verify(userProfileService, times(1))
-                        .saveUserProfile(any());
+                verify(userProfileRepository, times(1)).save(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Simple user registration");
                 verify(emailTokenService, never()).createSimpleUserToken(any());
@@ -302,8 +301,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
                 verify(authServerGrpcClient, times(1))
                         .authServerNewSimpleUserRegistration(any());
-                verify(userProfileService, times(1))
-                        .saveUserProfile(any());
+                verify(userProfileRepository, times(1)).save(any());
                 verify(emailTokenService, times(1))
                         .createSimpleUserToken(any());
                 verify(messagingService, never()).sendToEmailService(any());
@@ -454,7 +452,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                     .jsonPath("$.phoneNumber").isEqualTo(NEW_MOBILE);
 
             // then
-            verify(userProfileService, times(1)).userProfileExistsByEmailAndMobileNumber(NEW_EMAIL.toLowerCase(), NEW_MOBILE);
+            verify(userProfileRepository, times(1)).existsByEmailAndMobileNumberAllIgnoreCase(NEW_EMAIL.toLowerCase(), NEW_MOBILE);
             verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(NON_EXISTENT_ORG_NUMBER);
             verifyNoInteractions(authServerGrpcClient);
             verifyNoInteractions(organizationUserRegistrationRequestRepository);
@@ -569,7 +567,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(TestData.ORG_REG_NUMBER);
                 verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER));
 
-                verify(userProfileService, never()).saveUserProfile(any());
+                verify(userProfileRepository, never()).save(any());
                 verify(organizationUserRegistrationRequestRepository, never()).save(any());
                 verify(emailTokenService, never()).createOrganizationUserToken(any(), anyString(), anyString(), any());
                 verify(messagingService, never()).sendToEmailService(any());
@@ -589,8 +587,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER)))
                         .thenReturn(authUserResponse);
 
-                doThrow(new DataIntegrityViolationException("DB DED"))
-                        .when(userProfileService).saveUserProfile(any(UserProfile.class));
+                doThrow(new DataIntegrityViolationException("DB DED")).when(userProfileRepository).save(any(UserProfile.class));
 
                 long initialProfiles = userProfileRepository.count();
                 long initialRequests = organizationUserRegistrationRequestRepository.count();
@@ -611,7 +608,7 @@ class RegistrationFlowIT extends BasePostgresTest {
                 assertThat(finalRequests).isEqualTo(initialRequests);
 
                 verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), eq(RoleType.SIMPLE_USER));
-                verify(userProfileService, times(1)).saveUserProfile(any());
+                verify(userProfileRepository, times(1)).save(any());
                 verify(sagaCompensationActionService, times(1))
                         .authServerCredentialsRollback(AUTH_USER_ID, NEW_EMAIL.toLowerCase(), "Organization user registration");
 

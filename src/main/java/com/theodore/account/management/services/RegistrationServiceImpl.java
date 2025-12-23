@@ -47,7 +47,6 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
     private final MessagingService messagingService;
-    private final UserProfileService userProfileService;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
@@ -59,7 +58,6 @@ public class RegistrationServiceImpl implements RegistrationService {
                                    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerGrpcClient authServerGrpcClient,
                                    MessagingService messagingService,
-                                   UserProfileService userProfileService,
                                    UserProfileRepository userProfileRepository,
                                    UserProfileMapper userProfileMapper,
                                    OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
@@ -70,7 +68,6 @@ public class RegistrationServiceImpl implements RegistrationService {
         this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.authServerGrpcClient = authServerGrpcClient;
         this.messagingService = messagingService;
-        this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
         this.userProfileMapper = userProfileMapper;
         this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
@@ -86,7 +83,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         LOGGER.info("Registration process for simple user : {}", email);
 
-        if (userProfileService.userProfileExistsByEmailAndMobileNumber(email, userRequestDto.mobileNumber())) {
+        if (userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(email, userRequestDto.mobileNumber())) {
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
 
@@ -119,7 +116,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .step(SAVE_USER_PROFILE_STEP,
                         () -> {
                             var newUser = userProfileMapper.createSimpleUserDtoToUserProfile(context.getAuthUserId(), userRequestDto);
-                            context.setSavedProfile(userProfileService.saveUserProfile(newUser));
+                            context.setSavedProfile(userProfileRepository.save(newUser));
                         },
                         () -> userProfileRepository.delete(context.getSavedProfile())
 
@@ -149,7 +146,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         LOGGER.info("Registration process for user : {} working for organization : {}", email, userRequestDto.organizationRegNumber());
 
-        if (userProfileService.userProfileExistsByEmailAndMobileNumber(email, userRequestDto.mobileNumber())) {
+        if (userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(email, userRequestDto.mobileNumber())) {
             // returns the dto normally so that no email can be guessed
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }
@@ -197,7 +194,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                     userRequestDto,
                                     organization
                             );
-                            context.setSavedProfile(userProfileService.saveUserProfile(newUser));
+                            context.setSavedProfile(userProfileRepository.save(newUser));
                         },
                         () -> userProfileRepository.delete(context.getSavedProfile())
 

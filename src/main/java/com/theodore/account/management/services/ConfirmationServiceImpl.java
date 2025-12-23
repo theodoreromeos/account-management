@@ -13,8 +13,8 @@ import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponse
 import com.theodore.account.management.repositories.EmailVerificationTokenRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
-import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
+import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.user.ConfirmationStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -32,14 +32,11 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
 
-    private static final String TOKEN_ID = "tid";
     private static final String EMAIL = "email";
 
     private static final String USER_NOT_FOUND = "User not found";
 
-
     private final EmailTokenService emailTokenService;
-    private final UserProfileService userProfileService;
     private final UserProfileRepository userProfileRepository;
     private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final AuthServerGrpcClient authServerGrpcClient;
@@ -47,14 +44,12 @@ public class ConfirmationServiceImpl implements ConfirmationService {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
 
     public ConfirmationServiceImpl(EmailTokenService emailTokenService,
-                                   UserProfileService userProfileService,
                                    UserProfileRepository userProfileRepository,
                                    OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                    AuthServerGrpcClient authServerGrpcClient,
                                    MessagingService messagingService,
                                    EmailVerificationTokenRepository emailVerificationTokenRepository) {
         this.emailTokenService = emailTokenService;
-        this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
         this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.authServerGrpcClient = authServerGrpcClient;
@@ -166,7 +161,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
             // send successful confirmation email - rabbitmq to email service
         } else {
             LOGGER.info("EMAIL {} CONFIRMATION FAILED", email);
-            // throw exception
+            // todo:throw exception?
         }
     }
 
@@ -253,9 +248,8 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         emailVerificationTokenRepository.save(token);
     }
 
-    private UserProfile findUserProfileById(String userId){
-        return userProfileRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+    private UserProfile findUserProfileById(String userId) {
+        return userProfileRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
     }
 
     private String baseUrl() {//todo remove it
