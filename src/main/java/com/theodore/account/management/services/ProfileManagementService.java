@@ -9,4 +9,10 @@ public interface ProfileManagementService {
      */
     void adminProfileManagement(UserChangeInformationRequestDto requestDto);
 
+    /**
+     * @param username The username of the user profile
+     * @return The id of the user
+     */
+    String getUserIdToCreateDriver(String username);
+
 }
