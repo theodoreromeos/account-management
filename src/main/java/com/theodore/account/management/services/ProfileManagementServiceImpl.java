@@ -5,6 +5,7 @@ import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.repositories.UserProfileRepository;
+import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.exceptions.ReferenceMismatchException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
 import com.theodore.infrastructure.common.utils.MobilityUtils;
@@ -84,4 +85,13 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
                         }
                 ).run();
     }
+
+    @Override
+    public String getUserIdToCreateDriver(String username) {
+        UserProfile userProfile = userProfileRepository.findByEmailIgnoreCase(username)
+                .orElseThrow(() -> new NotFoundException("Username not found"));
+        return userProfile.getId();
+    }
+
+
 }
