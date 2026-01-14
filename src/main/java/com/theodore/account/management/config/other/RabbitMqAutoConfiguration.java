@@ -1,4 +1,4 @@
-package com.theodore.account.management.config;
+package com.theodore.account.management.config.other;
 
 import com.theodore.queue.common.config.CommonRabbitMqConfigs;
 import com.theodore.queue.common.emails.EmailQueueConfig;
