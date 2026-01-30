@@ -1,8 +1,6 @@
 package com.theodore.account.management.config.other;
 
 import com.theodore.account.management.utils.CacheNames;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

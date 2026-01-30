@@ -1,13 +1,24 @@
 package com.theodore.account.management.models.dto.requests;
 
+import com.theodore.infrastructure.common.utils.StrongPasswordValidator;
+import jakarta.validation.constraints.NotBlank;
+
 public class UserChangeInformationRequestDto {
 
+    @NotBlank
     private String oldEmail;
+    @NotBlank
     private String newEmail;
+    @NotBlank
     private String oldPassword;
+    @NotBlank
+    @StrongPasswordValidator
     private String newPassword;
+    @NotBlank
     private String name;
+    @NotBlank
     private String surname;
+    @NotBlank
     private String phoneNumber;
 
     public String getOldEmail() {
