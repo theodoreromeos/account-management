@@ -267,13 +267,10 @@
             </properties>
         </profile>
         <profile>
-            <id>testing</id>
+            <id>staging</id>
             <properties>
-                <spring.profiles.active>testing</spring.profiles.active>
+                <spring.profiles.active>staging</spring.profiles.active>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
         </profile>
         <profile>
             <id>prod</id>
