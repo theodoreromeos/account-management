@@ -91,6 +91,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         var sagaOrchestrator = new SagaOrchestrator();
 
         String userEmail = email != null ? email : "unknown";
+        //simulateLag();
 
         sagaOrchestrator
                 .step(CREATE_AUTH_USER_STEP,
@@ -310,6 +311,15 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private String baseUrl() {//todo remove it
         return "http://localhost/account-management/confirmation";
+    }
+
+    //testing slow service
+    private void simulateLag() {
+        try {
+            Thread.sleep(3100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 }

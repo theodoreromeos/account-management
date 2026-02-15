@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrganizationRegistrationProcessServiceTest {
@@ -95,8 +95,9 @@ class OrganizationRegistrationProcessServiceTest {
 
             // then
             assertThat(exception.getMessage()).contains("OrganizationRegistrationProcess not found");
-            verify(organizationRegistrationProcessRepository, times(1)).findById(any());
-            verifyNoMoreInteractions(organizationRegistrationProcessRepository);
+
+            then(organizationRegistrationProcessRepository).should().findById(any());
+            then(organizationRegistrationProcessRepository).shouldHaveNoMoreInteractions();
         }
 
         @DisplayName("organizationRegistrationDecision: registration failed and all rollbacks are triggered (negative scenario)")
@@ -126,17 +127,16 @@ class OrganizationRegistrationProcessServiceTest {
                     .isInstanceOf(RuntimeException.class);
 
             // then
-            verify(organizationRegistrationProcessRepository, times(1)).save(any());
-            verify(organizationRepository, times(1)).save(any());
-            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
-            verify(userProfileRepository, times(1)).save(any());
-            verify(sagaCompensationActionService, times(1)).authServerCredentialsRollback(any(), any(), any());
-            verify(organizationRepository, times(1)).delete(any());
-            verify(organizationRegistrationProcessRepository, times(1)).delete(any(OrganizationRegistrationProcess.class));
-
             ArgumentCaptor<String> authUserIdCaptor = ArgumentCaptor.forClass(String.class);
             ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
-            verify(sagaCompensationActionService).authServerCredentialsRollback(authUserIdCaptor.capture(), emailCaptor.capture(), any());
+
+            then(organizationRegistrationProcessRepository).should().save(any());
+            then(organizationRepository).should().save(any());
+            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
+            then(userProfileRepository).should().save(any());
+            then(organizationRepository).should().delete(any());
+            then(organizationRegistrationProcessRepository).should().delete(any(OrganizationRegistrationProcess.class));
+            then(sagaCompensationActionService).should().authServerCredentialsRollback(authUserIdCaptor.capture(), emailCaptor.capture(), any());
 
             assertThat(authUserIdCaptor.getValue()).isEqualTo(USER_ID);
             assertThat(emailCaptor.getValue()).isEqualTo(USER_EMAIL);
@@ -168,14 +168,13 @@ class OrganizationRegistrationProcessServiceTest {
                     .isInstanceOf(RuntimeException.class);
 
             // then
-            verify(organizationRegistrationProcessRepository, times(1)).save(any());
-            verify(organizationRepository, times(1)).save(any());
-            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
-            verify(organizationRepository, times(1)).delete(any());
-            verify(organizationRegistrationProcessRepository, times(1))
-                    .delete(any(OrganizationRegistrationProcess.class));
-            verifyNoInteractions(userProfileRepository);
-            verifyNoInteractions(sagaCompensationActionService);
+            then(organizationRegistrationProcessRepository).should().save(any());
+            then(organizationRepository).should().save(any());
+            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
+            then(organizationRepository).should().delete(any());
+            then(organizationRegistrationProcessRepository).should().delete(any(OrganizationRegistrationProcess.class));
+            then(userProfileRepository).shouldHaveNoInteractions();
+            then(sagaCompensationActionService).shouldHaveNoInteractions();
         }
 
         @DisplayName("organizationRegistrationDecision: registration rejected (positive scenario)")
@@ -193,9 +192,9 @@ class OrganizationRegistrationProcessServiceTest {
             organizationRegistrationProcessService.organizationRegistrationDecision(dto);
 
             // then
-            verify(organizationRegistrationProcessRepository, times(1)).save(any());
-            verifyNoInteractions(sagaCompensationActionService);
-            verifyNoInteractions(userProfileRepository);
+            then(organizationRegistrationProcessRepository).should().save(any());
+            then(sagaCompensationActionService).shouldHaveNoInteractions();
+            then(userProfileRepository).shouldHaveNoInteractions();
         }
 
         @DisplayName("organizationRegistrationDecision: registration approved (positive scenario)")
@@ -226,11 +225,11 @@ class OrganizationRegistrationProcessServiceTest {
             organizationRegistrationProcessService.organizationRegistrationDecision(dto);
 
             // then
-            verify(organizationRegistrationProcessRepository, times(1)).save(any());
-            verify(organizationRepository, times(1)).save(any());
-            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
-            verify(userProfileRepository, times(1)).save(any());
-            verifyNoInteractions(sagaCompensationActionService);
+            then(organizationRegistrationProcessRepository).should().save(any());
+            then(organizationRepository).should().save(any());
+            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
+            then(userProfileRepository).should().save(any());
+            then(sagaCompensationActionService).shouldHaveNoInteractions();
         }
 
 

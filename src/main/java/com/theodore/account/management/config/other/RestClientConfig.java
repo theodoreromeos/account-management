@@ -1,4 +1,4 @@
-package com.theodore.account.management.config;
+package com.theodore.account.management.config.other;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

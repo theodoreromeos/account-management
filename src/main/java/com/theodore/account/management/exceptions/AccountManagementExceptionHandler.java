@@ -2,6 +2,7 @@ package com.theodore.account.management.exceptions;
 
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.models.MobilityAppErrorResponse;
+import com.theodore.infrastructure.common.utils.MobilityUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
@@ -11,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,7 +33,7 @@ public class AccountManagementExceptionHandler {
 
         LOGGER.warn("Validation failed [{}]: {}", ex.getBindingResult().getObjectName(), fieldErrors, ex);
 
-        String userMessage = getExceptionMessage(ex.getBindingResult(), "Bad Request");
+        String userMessage = MobilityUtils.getExceptionMessage(ex.getBindingResult());
 
         MobilityAppErrorResponse error = new MobilityAppErrorResponse(userMessage, Instant.now());
 
@@ -117,15 +116,5 @@ public class AccountManagementExceptionHandler {
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Unexpected error occurred", Instant.now());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    private String getExceptionMessage(BindingResult bindingResult, String alternativeMessage) {
-        return bindingResult
-                .getFieldErrors()
-                .stream()
-                .map(FieldError::getDefaultMessage)
-                .toList()
-                .stream().findFirst().orElse(alternativeMessage);
-    }
-
 
 }

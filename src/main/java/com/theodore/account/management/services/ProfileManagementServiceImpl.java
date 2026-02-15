@@ -5,10 +5,12 @@ import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.repositories.UserProfileRepository;
+import com.theodore.account.management.utils.CacheNames;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.exceptions.ReferenceMismatchException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
 import com.theodore.infrastructure.common.utils.MobilityUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -87,6 +89,7 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.USER_ID_FROM_EMAIL, key = "#id", unless = "#result == null")
     public String getUserIdToCreateDriver(String username) {
         UserProfile userProfile = userProfileRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new NotFoundException("Username not found"));

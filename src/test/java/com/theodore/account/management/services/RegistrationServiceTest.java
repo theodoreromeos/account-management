@@ -29,7 +29,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrationServiceTest {
@@ -87,8 +87,11 @@ class RegistrationServiceTest {
             // then
             assertThat(response.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
-            verify(userProfileRepository, times(1)).existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
-            verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
+
+            then(userProfileRepository).should().existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
+            then(authServerGrpcClient).shouldHaveNoInteractions();
+            then(emailTokenService).shouldHaveNoInteractions();
+            then(messagingService).shouldHaveNoInteractions();
         }
 
         @DisplayName("registerNewSimpleUser: User is registered successfully (positive scenario)")
@@ -112,10 +115,11 @@ class RegistrationServiceTest {
             // then
             assertThat(response.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(response.getPhoneNumber()).isEqualTo(USER_PHONE);
-            verify(authServerGrpcClient, times(1)).authServerNewSimpleUserRegistration(any());
-            verify(userProfileRepository, times(1)).save(any());
-            verify(emailTokenService, times(1)).createSimpleUserToken(savedProfile);
-            verify(messagingService, times(1)).sendToEmailService(any());
+
+            then(authServerGrpcClient).should().authServerNewSimpleUserRegistration(any());
+            then(userProfileRepository).should().save(any());
+            then(emailTokenService).should().createSimpleUserToken(savedProfile);
+            then(messagingService).should().sendToEmailService(any());
         }
 
         @DisplayName("registerNewSimpleUser: User is not saved successfully and a compensation is triggered (negative scenario)")
@@ -134,7 +138,7 @@ class RegistrationServiceTest {
 
             // then
             ArgumentCaptor<String> authUserIdCaptor = ArgumentCaptor.forClass(String.class);
-            verify(sagaCompensationActionService).authServerCredentialsRollback(authUserIdCaptor.capture(), any(), any());
+            then(sagaCompensationActionService).should().authServerCredentialsRollback(authUserIdCaptor.capture(), any(), any());
 
             assertThat(authUserIdCaptor.getValue()).isEqualTo(USER_ID);
         }
@@ -161,8 +165,11 @@ class RegistrationServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
-            verify(userProfileRepository, times(1)).existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
-            verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
+
+            then(userProfileRepository).should().existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
+            then(authServerGrpcClient).shouldHaveNoInteractions();
+            then(emailTokenService).shouldHaveNoInteractions();
+            then(messagingService).shouldHaveNoInteractions();
         }
 
         @DisplayName("registerNewOrganizationUser: User already exists then return dto (negative scenario)")
@@ -183,9 +190,12 @@ class RegistrationServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
-            verify(userProfileRepository, times(1)).existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
-            verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(any());
-            verifyNoInteractions(authServerGrpcClient, emailTokenService, messagingService);
+
+            then(userProfileRepository).should().existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
+            then(organizationRepository).should().findByRegistrationNumberIgnoreCase(any());
+            then(authServerGrpcClient).shouldHaveNoInteractions();
+            then(emailTokenService).shouldHaveNoInteractions();
+            then(messagingService).shouldHaveNoInteractions();
         }
 
         @DisplayName("registerNewOrganizationUser: User is registered successfully (positive scenario)")
@@ -211,12 +221,13 @@ class RegistrationServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getEmail()).isEqualTo(USER_EMAIL);
             assertThat(result.getPhoneNumber()).isEqualTo(USER_PHONE);
-            verify(userProfileRepository, times(1)).existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
-            verify(organizationRepository, times(1)).findByRegistrationNumberIgnoreCase(any());
-            verify(authServerGrpcClient, times(1)).authServerNewOrganizationUserRegistration(any(), any());
-            verify(userProfileRepository, times(1)).save(any());
-            verify(emailTokenService, times(1)).createOrganizationUserToken(any(), any(), any(), any());
-            verify(messagingService, times(1)).sendToEmailService(any());
+
+            then(userProfileRepository).should().existsByEmailAndMobileNumberAllIgnoreCase(any(), any());
+            then(organizationRepository).should().findByRegistrationNumberIgnoreCase(any());
+            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
+            then(userProfileRepository).should().save(any());
+            then(emailTokenService).should().createOrganizationUserToken(any(), any(), any(), any());
+            then(messagingService).should().sendToEmailService(any());
         }
 
         @DisplayName("registerNewOrganizationUser: User is not saved successfully and a compensation is triggered (negative scenario)")
@@ -235,7 +246,7 @@ class RegistrationServiceTest {
 
             // then
             ArgumentCaptor<String> authUserIdCaptor = ArgumentCaptor.forClass(String.class);
-            verify(sagaCompensationActionService).authServerCredentialsRollback(authUserIdCaptor.capture(), any(), any());
+            then(sagaCompensationActionService).should().authServerCredentialsRollback(authUserIdCaptor.capture(), any(), any());
 
             assertThat(authUserIdCaptor.getValue()).isEqualTo(USER_ID);
         }
@@ -273,8 +284,8 @@ class RegistrationServiceTest {
             assertThat(result.organizationName()).isEqualTo(ORG_NAME);
             assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
 
-            verify(organizationRepository, times(1)).existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
-            verify(organizationRegistrationProcessRepository, times(1)).save(any());
+            then(organizationRepository).should().existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
+            then(organizationRegistrationProcessRepository).should().save(any());
         }
 
         @DisplayName("registerNewOrganizationEntity: Skips registration when registration number already exists (negative scenario)")
@@ -294,8 +305,8 @@ class RegistrationServiceTest {
             assertThat(result.organizationName()).isEqualTo(ORG_NAME);
             assertThat(result.registrationNumber()).isEqualTo(ORG_REG_NUMBER);
 
-            verify(organizationRepository, times(1)).existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
-            verify(organizationRegistrationProcessRepository, times(0)).save(any());
+            then(organizationRepository).should().existsByRegistrationNumberIgnoreCase(ORG_REG_NUMBER);
+            then(organizationRegistrationProcessRepository).shouldHaveNoInteractions();
         }
 
     }
