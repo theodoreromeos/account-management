@@ -1,6 +1,6 @@
 package com.theodore.account.management.utils;
 
-import com.theodore.account.management.integration.TestDataFeeder;
+import com.theodore.account.management.integration.TestDataHelper;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
@@ -12,12 +12,12 @@ import org.springframework.context.annotation.Bean;
 public class AccountManagementTestConfigs {
 
     @Bean
-    public TestDataFeeder testDataFeeder(UserProfileRepository userProfileRepository,
+    public TestDataHelper testDataFeeder(UserProfileRepository userProfileRepository,
                                          OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                                          OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                                          OrganizationRepository organizationRepository,
                                          OrganizationRegistrationProcessRepository orgRegistrationProcessRepository) {
-        return new TestDataFeeder(userProfileRepository,
+        return new TestDataHelper(userProfileRepository,
                 organizationRegistrationProcessRepository,
                 organizationUserRegistrationRequestRepository,
                 organizationRepository,

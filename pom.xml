@@ -37,7 +37,7 @@
         <!--    SWAGGER VERSION    -->
         <springdoc.version>2.8.15</springdoc.version>
         <!--   Theodore versions     -->
-        <mobility-common.version>0.0.4</mobility-common.version>
+        <mobility-common.version>0.0.5-SNAPSHOT</mobility-common.version>
     </properties>
 
     <dependencyManagement>
@@ -206,6 +206,11 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.redis</groupId>
+            <artifactId>testcontainers-redis</artifactId>
             <scope>test</scope>
         </dependency>
 

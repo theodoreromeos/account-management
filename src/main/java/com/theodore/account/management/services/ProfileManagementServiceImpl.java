@@ -89,7 +89,7 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.USER_ID_FROM_EMAIL, key = "#id", unless = "#result == null")
+    @Cacheable(cacheNames = CacheNames.USER_ID_FROM_EMAIL, key = "#username", unless = "#result == null")
     public String getUserIdToCreateDriver(String username) {
         UserProfile userProfile = userProfileRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new NotFoundException("Username not found"));
