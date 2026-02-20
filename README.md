@@ -264,5 +264,48 @@ Or with Maven directly:
 mvn spring-boot:run
 ```
 
-Make sure all required infrastructure services (PostgreSQL, Redis, RabbitMQ, Auth Server) 
-are available before starting.
+## Logging
+
+The application uses a custom `logback-spring.xml` configuration supporting
+Spring profile specific log levels and output formatting.
+
+```
+src/main/resources/
+└── logback-spring.xml
+```
+
+---
+
+## Shared Libraries
+
+This service depends on three internal libraries:
+
+| Library                 | Purpose                                                   |
+|-------------------------|-----------------------------------------------------------|
+| `infrastructure-common` | Shared infrastructure utilities and base configurations   |
+| `proto-common`          | Protobuf / gRPC service definitions                       |
+| `rabbitmq-common`       | RabbitMQ connection management and event abstractions     |
+
+These must be available in the local Maven repository or a private artifact
+registry before building.
+
+---
+
+
+## Docker
+
+A unified Docker Compose setup is planned to orchestrate both the database
+and the service:
+
+```bash
+#coming soon: single command to start everything
+docker compose up -d
+```
+
+> **Current state:** The provided `docker-compose.yml` starts only the PostgreSQL database. 
+> Service containerization is in progress.
+
+> [!WARNING]
+> **Make sure all required infrastructure services (PostgreSQL, Redis, RabbitMQ) 
+> are available before starting.**
+
