@@ -40,17 +40,21 @@ is wrapped in a saga with full compensating transaction support.
 
 ## Tech Stack
 
-| Layer             | Technology                                     |
-|-------------------|------------------------------------------------|
-| Language          | Java 21                                        |
-| Framework         | Spring Boot 3.5.6                              |
-| Build Tool        | Maven                                          |
-| Database          | PostgreSQL (via Spring Data JPA)               |
-| Cache             | Redis                                          |
-| Messaging         | RabbitMQ                                       |
-| Inter-service RPC | gRPC                                           |
-| Object Mapping    | MapStruct                                      |
-| Auth Protocol     | OAuth 2.1 (Spring Authorization Server client) |
+| Layer             | Technology                                          |
+|-------------------|-----------------------------------------------------|
+| Language          | Java 21                                             |
+| Framework         | Spring Boot 3.5.6                                   |
+| Build Tool        | Maven                                               |
+| Inbound API       | REST (Spring MVC)                                   |
+| Database          | PostgreSQL (via Spring Data JPA)                    |
+| Schema Migrations | Liquibase                                           |
+| Cache             | Redis                                               |
+| Messaging         | RabbitMQ                                            |
+| Outbound RPC      | gRPC (does not expose a gRPC server - client only ) |
+| Object Mapping    | MapStruct                                           |
+| Auth Protocol     | OAuth 2.1 (Spring Authorization Server client)      |
+| API Docs          | SpringDoc OpenAPI (Swagger UI)                      |
+| AOP               | Spring AOP                                          |
 
 ---
 
@@ -79,6 +83,7 @@ messages. The Email Service consumes and delivers them asynchronously.
 - **Redis caching:** for frequently read user identity lookups
 - **MapStruct:** for clean, performant and type safe mapping
 - **Centralized exception handling:** with structured error responses
+- **AOP-based performance monitoring:** automatic slow-method detection across service and repository layers
 
 ---
 
@@ -158,6 +163,21 @@ Null results are explicitly excluded from caching via the `unless` condition.
 
 ---
 
+## AOP Logging
+
+A custom `LoggingAspect` monitors all service and repository layer methods using Spring AOP.
+Methods that exceed a threshold (which is determined by a configuration)
+are automatically flagged with a `[SLOW]` warning log:
+
+```
+WARN  ConfirmationService - ConfirmationService.confirmSimpleUserEmail() took 1345ms [SLOW]
+```
+
+This provides lightweight, zero-boilerplate performance observability
+across the entire service layer without modifying business logic.
+
+---
+
 ## Security & Token Propagation
 
 All outbound gRPC calls to the Auth Server are authenticated using
@@ -213,6 +233,13 @@ and a timestamp.
 
 ---
 
+## API Endpoints Reference
+
+Full interactive documentation is available via **Swagger UI** at
+`http://localhost:8085/account-management/swagger-ui/index.html` when running locally.
+
+---
+
 ## Configuration
 
 The service is configured via `application.properties` and environment variables.
@@ -240,7 +267,7 @@ java -jar target/account-management-1.0.0.jar --spring.profiles.active=staging
 
 ## Prerequisites
 
-- **Java 21+** 
+- **Java 21+**
 - **Maven 3.9+**
 - **RabbitMQ**
 - **Docker**
@@ -270,8 +297,7 @@ The application uses a custom `logback-spring.xml` configuration supporting
 Spring profile specific log levels and output formatting.
 
 ```
-src/main/resources/
-└── logback-spring.xml
+src/main/resources/logback-spring.xml
 ```
 
 ---
@@ -280,17 +306,16 @@ src/main/resources/
 
 This service depends on three internal libraries:
 
-| Library                 | Purpose                                                   |
-|-------------------------|-----------------------------------------------------------|
-| `infrastructure-common` | Shared infrastructure utilities and base configurations   |
-| `proto-common`          | Protobuf / gRPC service definitions                       |
-| `rabbitmq-common`       | RabbitMQ connection management and event abstractions     |
+| Library                 | Purpose                                                 |
+|-------------------------|---------------------------------------------------------|
+| `infrastructure-common` | Shared infrastructure utilities and base configurations |
+| `proto-common`          | Protobuf / gRPC service definitions                     |
+| `rabbitmq-common`       | RabbitMQ connection management and event abstractions   |
 
 These must be available in the local Maven repository or a private artifact
 registry before building.
 
 ---
-
 
 ## Docker
 
@@ -302,10 +327,10 @@ and the service:
 docker compose up -d
 ```
 
-> **Current state:** The provided `docker-compose.yml` starts only the PostgreSQL database. 
+> **Current state:** The provided `docker-compose.yml` starts only the PostgreSQL database.
 > Service containerization is in progress.
 
 > [!WARNING]
-> **Make sure all required infrastructure services (PostgreSQL, Redis, RabbitMQ) 
+> **Make sure all required infrastructure services (PostgreSQL, Redis, RabbitMQ)
 > are available before starting.**
 
