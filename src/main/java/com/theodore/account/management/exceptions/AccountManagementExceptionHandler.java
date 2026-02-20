@@ -44,14 +44,14 @@ public class AccountManagementExceptionHandler {
     public ResponseEntity<MobilityAppErrorResponse> handleTokenExpiredErrors(ExpiredJwtException ex) {
         LOGGER.warn("JWT expired at {}: {}", ex.getClaims().getExpiration(), ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Expired token", Instant.now());
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<MobilityAppErrorResponse> handleInvalidTokenErrors(JwtException ex) {
         LOGGER.error("Invalid JWT token: {}", ex.getMessage(), ex);
         MobilityAppErrorResponse error = new MobilityAppErrorResponse("Invalid token", Instant.now());
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(NotFoundException.class)
