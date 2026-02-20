@@ -16,7 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TestDataFeeder {
+public class TestDataHelper {
 
     private final UserProfileRepository userProfileRepository;
     private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
@@ -24,7 +24,7 @@ public class TestDataFeeder {
     private final OrganizationRepository organizationRepository;
     private final OrganizationRegistrationProcessRepository orgRegistrationProcessRepository;
 
-    public TestDataFeeder(UserProfileRepository userProfileRepository,
+    public TestDataHelper(UserProfileRepository userProfileRepository,
                           OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
                           OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                           OrganizationRepository organizationRepository,

@@ -49,7 +49,7 @@ class RegistrationFlowIT extends BasePostgresTest {
     private static final String TEST_TOKEN = "test-token-abc123";
 
     @Autowired
-    TestDataFeeder testDataFeeder;
+    TestDataHelper testDataHelper;
 
     @MockitoSpyBean
     UserProfileRepository userProfileRepository;
@@ -71,13 +71,13 @@ class RegistrationFlowIT extends BasePostgresTest {
 
     @BeforeAll
     void initClient() {
-        client = WebTestClient.bindToServer().baseUrl(baseUrl()).build();
+        client = webTestClient.mutate().baseUrl(baseUrl()).build();
         reset(authServerGrpcClient, messagingService, emailTokenService, sagaCompensationActionService);
     }
 
     @BeforeEach
     void feedUserProfile() {
-        testDataFeeder.feedUserProfileTable();
+        testDataHelper.feedUserProfileTable();
     }
 
     @Nested
@@ -90,7 +90,7 @@ class RegistrationFlowIT extends BasePostgresTest {
 
         @AfterEach
         void cleanUp() {
-            testDataFeeder.cleanUserProfileTable();
+            testDataHelper.cleanUserProfileTable();
         }
 
         @Test
@@ -372,13 +372,13 @@ class RegistrationFlowIT extends BasePostgresTest {
             when(emailTokenService
                     .createOrganizationUserToken(any(Organization.class), anyString(), anyString(), any()))
                     .thenReturn(TEST_TOKEN);
-            testDataFeeder.feedOrganizationTable();
+            testDataHelper.feedOrganizationTable();
         }
 
         @AfterEach
         void cleanUp() {
-            testDataFeeder.cleanUserProfileTable();
-            testDataFeeder.cleanOrganizationTable();
+            testDataHelper.cleanUserProfileTable();
+            testDataHelper.cleanOrganizationTable();
         }
 
         @Test
