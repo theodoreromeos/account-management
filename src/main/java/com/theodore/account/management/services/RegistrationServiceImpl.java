@@ -155,7 +155,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         Organization organization;
         try {
             organization = findByRegistrationNumber(userRequestDto.organizationRegNumber());
-        } catch (NotFoundException e) {
+        } catch (Exception e) {
             // returns the dto normally so that no organization registration number can be guessed
             return new RegisteredUserResponseDto(email, userRequestDto.mobileNumber());
         }

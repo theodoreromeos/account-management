@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
 class AdminActionsIT extends BasePostgresTest {
 
     @Autowired
-    TestDataFeeder testDataFeeder;
+    TestDataHelper testDataHelper;
     @Autowired
     OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
     @Autowired
@@ -64,7 +64,7 @@ class AdminActionsIT extends BasePostgresTest {
 
     @BeforeAll
     void initClient() {
-        client = WebTestClient.bindToServer().baseUrl(baseUrl()).build();
+        client = webTestClient.mutate().baseUrl(baseUrl()).build();
         validToken = jwtTestUtils.createSimpleUserToken(TestData.SYS_ADMIN_EMAIL, RoleType.SYS_ADMIN.getScopeValue());
         invalidToken = jwtTestUtils.createSimpleUserToken(TestData.NON_ADMIN_EMAIL, RoleType.SIMPLE_USER.getScopeValue());
 
@@ -79,12 +79,12 @@ class AdminActionsIT extends BasePostgresTest {
 
         @BeforeEach
         void initClient() {
-            testDataFeeder.feedOrganizationRegistrationProcess();
+            testDataHelper.feedOrganizationRegistrationProcess();
         }
 
         @AfterEach
         void cleanClient() {
-            testDataFeeder.cleanOrganizationRegistrationProcess();
+            testDataHelper.cleanOrganizationRegistrationProcess();
         }
 
         private static final int DEFAULT_PAGE = 0;
@@ -353,13 +353,13 @@ class AdminActionsIT extends BasePostgresTest {
 
         @BeforeEach
         void initClient() {
-            testDataFeeder.feedUserProfileTable();
+            testDataHelper.feedUserProfileTable();
             reset(authServerGrpcClient, jwtDecoder, userProfileRepository);
         }
 
         @AfterEach
         void cleanClient() {
-            testDataFeeder.cleanUserProfileTable();
+            testDataHelper.cleanUserProfileTable();
         }
 
         @Test

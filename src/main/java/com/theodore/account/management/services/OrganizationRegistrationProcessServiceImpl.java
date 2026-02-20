@@ -192,7 +192,6 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                             var confirmationEmail = new EmailDto(List.of(context.getSavedProfile().getEmail()),
                                     "Organization Admin Account Confirmation", body);
                             messagingService.sendToEmailService(confirmationEmail);
-                            LOGGER.info("the password is :{}", context.getTempPassword());//todo remove it
                         },
                         () -> {
                         }
