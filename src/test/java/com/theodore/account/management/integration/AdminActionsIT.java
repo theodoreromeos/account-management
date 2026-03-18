@@ -3,7 +3,6 @@ package com.theodore.account.management.integration;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.models.dto.requests.SearchRegistrationProcessRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
-import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.RegistrationProcessResponseDto;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
@@ -12,8 +11,8 @@ import com.theodore.account.management.services.SagaCompensationActionService;
 import com.theodore.account.management.utils.AccountManagementTestConfigs;
 import com.theodore.account.management.utils.JwtTestUtils;
 import com.theodore.account.management.utils.TestData;
-import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.RoleType;
+import com.theodore.infrastructure.common.entities.enums.Country;
 import com.theodore.infrastructure.common.models.SearchResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,8 +64,8 @@ class AdminActionsIT extends BasePostgresTest {
     @BeforeAll
     void initClient() {
         client = webTestClient.mutate().baseUrl(baseUrl()).build();
-        validToken = jwtTestUtils.createSimpleUserToken(TestData.SYS_ADMIN_EMAIL, RoleType.SYS_ADMIN.getScopeValue());
-        invalidToken = jwtTestUtils.createSimpleUserToken(TestData.NON_ADMIN_EMAIL, RoleType.SIMPLE_USER.getScopeValue());
+        validToken = jwtTestUtils.createSimpleUserToken(TestData.SYS_ADMIN_ID, RoleType.SYS_ADMIN.getScopeValue());
+        invalidToken = jwtTestUtils.createSimpleUserToken(TestData.SIMPLE_USER_ID, RoleType.SIMPLE_USER.getScopeValue());
 
         OAuth2Error error = new OAuth2Error("invalid_token", "Jwt expired at some point", null);
         expiredException = new JwtValidationException("JWT expired", List.of(error));
@@ -340,7 +339,6 @@ class AdminActionsIT extends BasePostgresTest {
                     null);
         }
 
-
     }
 
     @Nested
@@ -404,12 +402,12 @@ class AdminActionsIT extends BasePostgresTest {
         @DisplayName("adminProfileManagement: update successful with valid data (positive scenario)")
         void givenValidData_whenManagingAdminProfile_returnOk() {
             // given
-            var userProfile = userProfileRepository.findByEmailIgnoreCase(TestData.SYS_ADMIN_EMAIL).orElse(null);
+            when(jwtDecoder.decode(anyString())).thenReturn(validToken);
+
+            var userProfile = userProfileRepository.findByIdAndEmailIgnoreCase(validToken.getSubject(), TestData.SYS_ADMIN_EMAIL).orElse(null);
             assertThat(userProfile).isNotNull();
 
-            when(jwtDecoder.decode(anyString())).thenReturn(validToken);
             var request = createUserChangeInformationRequestDto();
-            when(authServerGrpcClient.manageAuthServerUserAccount(any())).thenReturn(new AuthUserIdResponseDto(userProfile.getId()));
 
             // when
             client.post()

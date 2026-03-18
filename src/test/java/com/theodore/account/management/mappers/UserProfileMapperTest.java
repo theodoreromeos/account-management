@@ -6,7 +6,7 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationUserRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleUserRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.Country;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

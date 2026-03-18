@@ -11,5 +11,7 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, String
 
     Optional<UserProfile> findByEmailIgnoreCase(String email);
 
+    Optional<UserProfile> findByIdAndEmailIgnoreCase(String id, String email);
+
 
 }

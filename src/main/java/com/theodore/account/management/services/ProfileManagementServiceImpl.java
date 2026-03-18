@@ -5,18 +5,15 @@ import com.theodore.account.management.mappers.UserProfileMapper;
 import com.theodore.account.management.models.dto.requests.AuthUserManageAccountRequestDto;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.repositories.UserProfileRepository;
+import com.theodore.account.management.utils.AccountManagementUtils;
 import com.theodore.account.management.utils.CacheNames;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
-import com.theodore.infrastructure.common.exceptions.ReferenceMismatchException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
 import com.theodore.infrastructure.common.utils.MobilityUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static java.util.Objects.requireNonNull;
 
 @Service
 public class ProfileManagementServiceImpl implements ProfileManagementService {
@@ -42,15 +39,18 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     @Override
     public void adminProfileManagement(UserChangeInformationRequestDto requestDto) {
 
+        var userId = AccountManagementUtils.getLoggedInUserId();
+
+        final Optional<UserProfile> optionalUserProfile = userProfileRepository.findByIdAndEmailIgnoreCase(userId, requestDto.getOldEmail());
+
         String oldEmail = MobilityUtils.normalizeEmail(requestDto.getOldEmail());
         String newEmail = MobilityUtils.normalizeEmail(requestDto.getNewEmail());
 
-        final Optional<UserProfile> optionalUserProfile = userProfileRepository.findByEmailIgnoreCase(oldEmail);
-        final AtomicReference<String> authUserId = new AtomicReference<>();
-
         String logMsg = "Admin Account Management";
 
-        var authServerAccManageRequest = new AuthUserManageAccountRequestDto(oldEmail,
+        var authServerAccManageRequest = new AuthUserManageAccountRequestDto(
+                userId,
+                oldEmail,
                 newEmail,
                 requestDto.getPhoneNumber(),
                 requestDto.getOldPassword(),
@@ -59,28 +59,18 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
 
         new SagaOrchestrator()
                 .step(SEND_AUTH_USER_ACCOUNT_CHANGES_STEP,
-                        () -> {
-                            var authUser = requireNonNull(authServerGrpcClient.manageAuthServerUserAccount(authServerAccManageRequest),
-                                    "Auth Server User response is null");
-                            authUserId.set(authUser.id());
-                        },
-                        () -> sagaCompensationActionService.authServerCredentialsRollback(authUserId.get(), newEmail, logMsg)
+                        () -> authServerGrpcClient.manageAuthServerUserAccount(authServerAccManageRequest),
+                        () -> sagaCompensationActionService.authServerCredentialsRollback(userId, newEmail, logMsg)
                 )
                 .step(SAVE_USER_PROFILE_STEP,
                         () -> {
                             final var userProfile = optionalUserProfile
-                                    .map(userProf -> {
-                                        if (!authUserId.get().equals(userProf.getId())) {
-                                            throw new ReferenceMismatchException("Id mismatch between auth server and account management");
-                                        }
-                                        return userProfileMapper.mapUserProfileChangesToEntity(requestDto, userProf);
-                                    })
+                                    .map(userProf -> userProfileMapper.mapUserProfileChangesToEntity(requestDto, userProf))
                                     .orElseGet(() -> {
                                         var userProf = userProfileMapper.mapUserProfileChangesToEntity(requestDto, new UserProfile());
-                                        userProf.setId(authUserId.get());
+                                        userProf.setId(userId);
                                         return userProf;
                                     });
-
                             userProfileRepository.save(userProfile);
                         },
                         () -> {
@@ -89,12 +79,10 @@ public class ProfileManagementServiceImpl implements ProfileManagementService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.USER_ID_FROM_EMAIL, key = "#username", unless = "#result == null")
-    public String getUserIdToCreateDriver(String username) {
-        UserProfile userProfile = userProfileRepository.findByEmailIgnoreCase(username)
-                .orElseThrow(() -> new NotFoundException("Username not found"));
-        return userProfile.getId();
+    @Cacheable(cacheNames = CacheNames.USER_EMAIL_FROM_ID, key = "#userId", unless = "#result == null")
+    public String getUserEmailByUserId(String userId) {
+        UserProfile userProfile = userProfileRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        return userProfile.getEmail();
     }
-
 
 }

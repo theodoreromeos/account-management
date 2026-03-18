@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theodore.account.management.models.dto.requests.UserChangeInformationRequestDto;
 import com.theodore.account.management.services.OrganizationRegistrationProcessService;
 import com.theodore.account.management.services.ProfileManagementService;
-import com.theodore.account.management.utils.EmailGuard;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,9 +15,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 
 @WebMvcTest(AdminController.class)
@@ -34,8 +33,6 @@ class AdminControllerTest {
     OrganizationRegistrationProcessService organizationRegistrationProcessService;
     @MockitoBean
     ProfileManagementService profileManagementService;
-    @MockitoBean(name = "emailGuard")
-    EmailGuard emailGuard;
 
     private static final String URL = "/admin/manage";
 
@@ -50,10 +47,10 @@ class AdminControllerTest {
     @Test
     @WithMockUser(roles = "SYS_ADMIN")
     void givenAdminRole_whenManageAdminAccount_returnOk() throws Exception {
-        when(emailGuard.isAllowed(any(), eq(OLD_EMAIL))).thenReturn(true);
-
+        // given
         var dto = createUserChangeInformationRequestDto();
 
+        // when and then
         mockMvc.perform(post(URL)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -68,26 +65,6 @@ class AdminControllerTest {
     @WithMockUser(roles = "USER")
     void givenIncorrectRole_whenManageAdminAccount_returnForbidden() throws Exception {
         // given
-        when(emailGuard.isAllowed(any(), anyString())).thenReturn(true);
-
-        var dto = createUserChangeInformationRequestDto();
-
-        // when and then
-        mockMvc.perform(post(URL)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isForbidden());
-
-        verifyNoInteractions(profileManagementService);
-    }
-
-    @Test
-    @WithMockUser(roles = "SYS_ADMIN")
-    void givenInvalidOldEmail_whenManageAdminAccount_returnForbidden() throws Exception {
-        // given
-        when(emailGuard.isAllowed(any(), eq("old@example.com"))).thenReturn(false);
-
         var dto = createUserChangeInformationRequestDto();
 
         // when and then
@@ -104,8 +81,6 @@ class AdminControllerTest {
     @WithMockUser(roles = "SYS_ADMIN")
     void givenNoCsrf_whenManageAdminAccount_returnForbidden() throws Exception {
         // given
-        when(emailGuard.isAllowed(any(), eq("old@example.com"))).thenReturn(true);
-
         var dto = createUserChangeInformationRequestDto();
 
         // when and then
@@ -121,8 +96,6 @@ class AdminControllerTest {
     @WithMockUser(roles = "SYS_ADMIN")
     void givenInvalidRequest_whenManageAdminAccount_returnBadRequest() throws Exception {
         // given
-        when(emailGuard.isAllowed(any(), any())).thenReturn(true);
-
         var dto = createUserChangeInformationRequestDto();
         dto.setName("");
 

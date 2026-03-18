@@ -27,7 +27,7 @@ public class AdminController {
     }
 
     @PostMapping("/manage")
-    @PreAuthorize("hasRole('SYS_ADMIN') and @emailGuard.isAllowed(authentication, #requestDto.oldEmail)")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Void> manageAdminInfo(@RequestBody @Valid UserChangeInformationRequestDto requestDto) {
 
         profileManagementService.adminProfileManagement(requestDto);
