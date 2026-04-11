@@ -18,10 +18,10 @@ public class MiscController {
         this.profileManagementService = profileManagementService;
     }
 
-    @GetMapping("/driver-id/{username}")
+    @GetMapping("/driver-email/{userId}")
     @PreAuthorize("hasRole('INTERNAL_SERVICE')")
-    public ResponseEntity<String> getUserIdFromEmail(@PathVariable String username) {
-        return ResponseEntity.ok().body(profileManagementService.getUserIdToCreateDriver(username));
+    public ResponseEntity<String> getUserEmailFromId(@PathVariable String userId) {
+        return ResponseEntity.ok().body(profileManagementService.getUserEmailByUserId(userId));
     }
 
 }

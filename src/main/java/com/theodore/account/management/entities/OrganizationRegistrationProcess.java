@@ -2,7 +2,7 @@ package com.theodore.account.management.entities;
 
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.infrastructure.common.entities.AuditableUpdateEntity;
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.Country;
 import com.theodore.infrastructure.common.utils.MobilityUtils;
 import jakarta.persistence.*;
 

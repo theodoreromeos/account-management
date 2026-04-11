@@ -17,11 +17,12 @@ import com.theodore.account.management.repositories.OrganizationRegistrationProc
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
-import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
+import com.theodore.infrastructure.common.entities.enums.RoleType;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.infrastructure.common.saga.SagaOrchestrator;
 import com.theodore.infrastructure.common.utils.MobilityUtils;
 import com.theodore.queue.common.emails.EmailDto;
+import com.theodore.queue.common.services.MessagingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

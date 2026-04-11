@@ -6,11 +6,9 @@ import com.theodore.account.management.entities.UserProfile;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
-import com.theodore.account.management.repositories.OrganizationUserRegistrationRequestRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
-import com.theodore.account.management.utils.AccountManagementTestUtils;
 import com.theodore.account.management.utils.TestData;
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.Country;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,27 +17,21 @@ import java.util.List;
 public class TestDataHelper {
 
     private final UserProfileRepository userProfileRepository;
-    private final OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository;
-    private final OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository;
     private final OrganizationRepository organizationRepository;
     private final OrganizationRegistrationProcessRepository orgRegistrationProcessRepository;
 
     public TestDataHelper(UserProfileRepository userProfileRepository,
-                          OrganizationRegistrationProcessRepository organizationRegistrationProcessRepository,
-                          OrganizationUserRegistrationRequestRepository organizationUserRegistrationRequestRepository,
                           OrganizationRepository organizationRepository,
                           OrganizationRegistrationProcessRepository orgRegistrationProcessRepository) {
         this.userProfileRepository = userProfileRepository;
-        this.organizationRegistrationProcessRepository = organizationRegistrationProcessRepository;
-        this.organizationUserRegistrationRequestRepository = organizationUserRegistrationRequestRepository;
         this.organizationRepository = organizationRepository;
         this.orgRegistrationProcessRepository = orgRegistrationProcessRepository;
     }
 
     public void feedUserProfileTable() {
         List<UserProfile> userProfileList = List.of(
-                createSimpleUserProfile(TestData.EXISTING_NAME, TestData.EXISTING_SURNAME, TestData.EXISTING_MOBILE),
-                createAdminUserProfile(TestData.SYS_ADMIN_EMAIL, TestData.SYS_ADMIN_NAME, TestData.SYS_ADMIN_SURNAME, TestData.SYS_ADMIN_MOBILE)
+                createSimpleUserProfile(TestData.SIMPLE_USER_ID, TestData.EXISTING_NAME, TestData.EXISTING_SURNAME, TestData.EXISTING_MOBILE),
+                createAdminUserProfile(TestData.SYS_ADMIN_ID, TestData.SYS_ADMIN_EMAIL, TestData.SYS_ADMIN_NAME, TestData.SYS_ADMIN_SURNAME, TestData.SYS_ADMIN_MOBILE)
         );
         userProfileRepository.saveAll(userProfileList);
     }
@@ -67,10 +59,9 @@ public class TestDataHelper {
         orgRegistrationProcessRepository.deleteAll();
     }
 
-    private UserProfile createSimpleUserProfile(String firstName, String lastName, String mobileNumber) {
-        String id = AccountManagementTestUtils.generateUlId();
+    private UserProfile createSimpleUserProfile(String userId, String firstName, String lastName, String mobileNumber) {
         String email = firstName + lastName + "@mobilitymail.com";
-        UserProfile userProfile = new UserProfile(id, email, mobileNumber);
+        UserProfile userProfile = new UserProfile(userId, email, mobileNumber);
         userProfile.setBirthDate(LocalDate.now());
         userProfile.setName(firstName);
         userProfile.setSurname(lastName);
@@ -85,9 +76,8 @@ public class TestDataHelper {
         return org;
     }
 
-    private UserProfile createAdminUserProfile(String email, String firstName, String lastName, String mobileNumber) {
-        String id = AccountManagementTestUtils.generateUlId();
-        UserProfile adminProfile = new UserProfile(id, email, mobileNumber);
+    private UserProfile createAdminUserProfile(String userId, String email, String firstName, String lastName, String mobileNumber) {
+        UserProfile adminProfile = new UserProfile(userId, email, mobileNumber);
         adminProfile.setBirthDate(LocalDate.now());
         adminProfile.setName(firstName);
         adminProfile.setSurname(lastName);

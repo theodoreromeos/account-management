@@ -1,6 +1,7 @@
 package com.theodore.account.management.services;
 
 import com.theodore.queue.common.authserver.CredentialsRollbackEventDto;
+import com.theodore.queue.common.services.MessagingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

@@ -50,7 +50,7 @@ public class CacheConfig implements CachingConfigurer {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(valueSerializer));
 
         Map<String, RedisCacheConfiguration> perCache = new HashMap<>();
-        perCache.put(CacheNames.USER_ID_FROM_EMAIL, defaults.entryTtl(Duration.ofMinutes(30)));
+        perCache.put(CacheNames.USER_EMAIL_FROM_ID, defaults.entryTtl(Duration.ofMinutes(30)));
 
         return RedisCacheManager.RedisCacheManagerBuilder
                 .fromConnectionFactory(connectionFactory)
