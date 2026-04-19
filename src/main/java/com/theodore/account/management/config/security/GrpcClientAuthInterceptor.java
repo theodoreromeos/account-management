@@ -39,8 +39,8 @@ public class GrpcClientAuthInterceptor implements ClientInterceptor {
 
     private String getAccessToken() {
         OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
-                .withClientRegistrationId("mobility-api")
-                .principal("internal-client")
+                .withClientRegistrationId("auth-server-grpc")
+                .principal("auth-server-grpc")
                 .build();
 
         OAuth2AuthorizedClient client = authorizedClientManager.authorize(authRequest);

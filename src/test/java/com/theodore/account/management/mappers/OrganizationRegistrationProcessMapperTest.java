@@ -4,7 +4,7 @@ import com.theodore.account.management.entities.OrganizationRegistrationProcess;
 import com.theodore.account.management.enums.OrganizationRegistrationStatus;
 import com.theodore.account.management.models.dto.requests.CreateNewOrganizationEntityRequestDto;
 import com.theodore.account.management.models.dto.requests.CreateOrganizationAdminRequestDto;
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.Country;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

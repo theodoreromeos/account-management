@@ -5,7 +5,7 @@ import com.theodore.account.management.models.dto.requests.CreateNewOrganization
 import com.theodore.account.management.models.dto.requests.CreateNewSimpleAuthUserRequestDto;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import com.theodore.account.management.models.dto.responses.OrgAdminInfoResponseDto;
-import com.theodore.infrastructure.common.entities.modeltypes.RoleType;
+import com.theodore.infrastructure.common.entities.enums.RoleType;
 import com.theodore.user.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.slf4j.Logger;
@@ -120,12 +120,12 @@ public class AuthServerGrpcClient {
     /**
      * Sends changes for a user account data via gRPC call to the auth server.
      *
-     * @param requestDto contains current and new password, phone number , current and new emails
-     * @return user id
+     * @param requestDto contains user id, current and new password, phone number , current and new emails
      */
-    public AuthUserIdResponseDto manageAuthServerUserAccount(AuthUserManageAccountRequestDto requestDto) {
+    public void manageAuthServerUserAccount(AuthUserManageAccountRequestDto requestDto) {
         LOGGER.info("Sending request to manage auth server user's : {} details", requestDto.oldEmail());
         var grpcRequest = ManageAuthUserAccountRequest.newBuilder()
+                .setUserId(requestDto.userId())
                 .setOldEmail(requestDto.oldEmail())
                 .setNewEmail(requestDto.newEmail())
                 .setMobileNumber(requestDto.phoneNumber())
@@ -133,9 +133,7 @@ public class AuthServerGrpcClient {
                 .setNewPassword(requestDto.newPassword())
                 .build();
 
-        var authUser = this.authServerAccountManagementClient.manageUserAccount(grpcRequest);
-
-        return new AuthUserIdResponseDto(authUser.getUserId());
+        this.authServerAccountManagementClient.manageUserAccount(grpcRequest);
     }
 
 }

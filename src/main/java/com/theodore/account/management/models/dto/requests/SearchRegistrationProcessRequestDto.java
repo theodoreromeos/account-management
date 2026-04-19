@@ -1,6 +1,6 @@
 package com.theodore.account.management.models.dto.requests;
 
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.Country;
 
 public record SearchRegistrationProcessRequestDto(SearchOrganizationRegistrationStatus status,
                                                   String organizationName,

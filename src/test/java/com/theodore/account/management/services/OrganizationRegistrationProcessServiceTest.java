@@ -12,7 +12,7 @@ import com.theodore.account.management.models.dto.requests.OrganizationRegistrat
 import com.theodore.account.management.repositories.OrganizationRegistrationProcessRepository;
 import com.theodore.account.management.repositories.OrganizationRepository;
 import com.theodore.account.management.repositories.UserProfileRepository;
-import com.theodore.infrastructure.common.enums.Country;
+import com.theodore.infrastructure.common.entities.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
 import org.junit.jupiter.api.DisplayName;

@@ -2,8 +2,6 @@ package com.theodore.account.management.utils;
 
 public class TestData {
 
-    public static final String ORG_REG_EXISTING = "TEST-12345";
-
     public static final String EXISTING_EMAIL = "FrankDrebin@mobilitymail.com";
     public static final String EXISTING_MOBILE = "69787686";
     public static final String EXISTING_NAME = "Frank";
@@ -17,11 +15,12 @@ public class TestData {
     public static final String NEW_NAME = "Pippin";
     public static final String NEW_SURNAME = "Took";
 
+    public static final String SYS_ADMIN_ID = AccountManagementTestUtils.generateUlId();
     public static final String SYS_ADMIN_EMAIL = "admin@mobilitymail.com";
     public static final String SYS_ADMIN_NAME = "test-admin-name";
     public static final String SYS_ADMIN_SURNAME = "test-admin-surname";
     public static final String SYS_ADMIN_MOBILE = "69645646";
 
-    public static final String NON_ADMIN_EMAIL = "user@mobilitymail.com";
+    public static final String SIMPLE_USER_ID = AccountManagementTestUtils.generateUlId();
 
 }

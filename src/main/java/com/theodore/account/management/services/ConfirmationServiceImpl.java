@@ -15,6 +15,7 @@ import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.exceptions.InvalidTokenException;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.queue.common.emails.EmailDto;
+import com.theodore.queue.common.services.MessagingService;
 import com.theodore.user.ConfirmationStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
