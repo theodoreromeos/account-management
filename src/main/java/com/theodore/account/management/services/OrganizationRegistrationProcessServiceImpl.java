@@ -116,6 +116,8 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
         OrganizationRegistrationProcess registrationProcess = organizationRegistrationProcessRepository.findById(requestDto.id())
                 .orElseThrow(() -> new NotFoundException("OrganizationRegistrationProcess not found"));
 
+        OrganizationRegistrationStatus originalProcessStatus = registrationProcess.getAdminApprovedStatus();
+
         OrganizationRegistrationStatus decisionStatus = OrganizationRegistrationStatus.decisionToStatus(requestDto.decision());
 
         registrationProcess.setAdminApprovedStatus(decisionStatus);
@@ -137,7 +139,10 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                             context.setRegistrationProcess(savedRegistrationProcess);
                             context.setTempPassword(SecurePasswordGenerator.generatePlaceholderPassword());
                         },
-                        () -> organizationRegistrationProcessRepository.delete(context.getRegistrationProcess())
+                        () -> {
+                            context.getRegistrationProcess().setAdminApprovedStatus(originalProcessStatus);
+                            organizationRegistrationProcessRepository.save(context.getRegistrationProcess());
+                        }
                 )
                 .step(CREATE_ORGANIZATION_STEP,
                         () -> {
@@ -148,7 +153,6 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                 )
                 .step(CREATE_ORGANIZATION_AUTH_USER_STEP,
                         () -> {
-                            LOGGER.info("CONTEXT password is :{}", context.getTempPassword());
                             var orgAuthUserRequest = new CreateNewOrganizationAuthUserRequestDto(
                                     context.getRegistrationProcess().getOrgAdminEmail(),
                                     context.getRegistrationProcess().getOrgAdminPhone(),
@@ -179,6 +183,9 @@ public class OrganizationRegistrationProcessServiceImpl implements OrganizationR
                             context.setSavedProfile(newUser);
                         },
                         () -> {
+                            if (context.getSavedProfile() != null) {
+                                userProfileRepository.delete(context.getSavedProfile());
+                            }
                         }
                 )
                 .step(SEND_EMAIL_STEP,
