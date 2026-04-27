@@ -37,7 +37,7 @@
         <!--    SWAGGER VERSION    -->
         <springdoc.version>2.8.15</springdoc.version>
         <!--   Theodore versions     -->
-        <mobility-common.version>0.0.6</mobility-common.version>
+        <mobility-common.version>0.0.7</mobility-common.version>
     </properties>
 
     <dependencyManagement>
@@ -46,6 +46,27 @@
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-bom</artifactId>
                 <version>${grpc.java.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.theodore.common</groupId>
+                <artifactId>infrastructure-common</artifactId>
+                <version>${mobility-common.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.theodore.common</groupId>
+                <artifactId>proto-common</artifactId>
+                <version>${mobility-common.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.theodore.common</groupId>
+                <artifactId>rabbitmq-common</artifactId>
+                <version>${mobility-common.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -88,12 +109,20 @@
         <dependency>
             <groupId>com.theodore.common</groupId>
             <artifactId>proto-common</artifactId>
-            <version>${mobility-common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.theodore.common</groupId>
             <artifactId>rabbitmq-common</artifactId>
-            <version>${mobility-common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.theodore.common</groupId>
+            <artifactId>infrastructure-common</artifactId>
+        </dependency>
+
+        <!--    GENERAL    -->
+        <dependency>
+            <groupId>com.github.f4b6a3</groupId>
+            <artifactId>ulid-creator</artifactId>
         </dependency>
 
         <!--	JWT	  -->
