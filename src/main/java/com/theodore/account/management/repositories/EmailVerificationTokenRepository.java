@@ -2,7 +2,9 @@ package com.theodore.account.management.repositories;
 
 import com.theodore.account.management.entities.EmailVerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -12,6 +14,8 @@ public interface EmailVerificationTokenRepository extends JpaRepository<EmailVer
             nativeQuery = true)
     Optional<EmailVerificationToken> findByUserIdAndStatusPending(String userId);
 
-    long deleteByStatus(EmailVerificationToken.VerificationStatus status);
+    @Modifying
+    @Query("delete from EmailVerificationToken e where e.status <> :status")
+    int deleteByStatusNot(@Param("status") EmailVerificationToken.VerificationStatus status);
 
 }

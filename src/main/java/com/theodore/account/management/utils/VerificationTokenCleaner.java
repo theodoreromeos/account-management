@@ -17,10 +17,10 @@ public class VerificationTokenCleaner {
         this.emailTokenService = emailTokenService;
     }
 
-    @Scheduled(cron = "0 58 13 * * *")
-    public void cleanUsedVerificationTokens() {
-        LOGGER.trace("Cleaning up email verification tokens");
-        emailTokenService.cleanUsedVeriricationTokens();
+    @Scheduled(cron = "0 */15 * * * *")
+    public void cleanVerificationTokens() {
+        LOGGER.info("Cleaning up email verification tokens");
+        emailTokenService.cleanVerificationTokens();
     }
 
 }

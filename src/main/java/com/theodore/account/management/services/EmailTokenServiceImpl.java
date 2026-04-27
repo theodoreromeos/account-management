@@ -158,8 +158,8 @@ public class EmailTokenServiceImpl implements EmailTokenService {
 
     @Override
     @Transactional
-    public void cleanUsedVeriricationTokens() {
-        long count = emailVerificationTokenRepository.deleteByStatus(EmailVerificationToken.VerificationStatus.USED);
+    public void cleanVerificationTokens() {
+        long count = emailVerificationTokenRepository.deleteByStatusNot(EmailVerificationToken.VerificationStatus.PENDING);
         LOGGER.trace("Number of used verification tokens deleted : {}", count);
     }
 
