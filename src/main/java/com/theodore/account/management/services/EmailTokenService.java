@@ -46,8 +46,8 @@ public interface EmailTokenService {
     Jws<Claims> parseToken(String token);
 
     /**
-     * Deletes the used email verification tokens.
+     * Deletes the used and revoked email verification tokens.
      */
-    void cleanUsedVeriricationTokens();
+    void cleanVerificationTokens();
 
 }
