@@ -15,6 +15,7 @@ import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.entities.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
 import com.theodore.account.management.models.dto.responses.AuthUserIdResponseDto;
+import com.theodore.queue.common.services.MessagingService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -130,12 +131,15 @@ class OrganizationRegistrationProcessServiceTest {
             ArgumentCaptor<String> authUserIdCaptor = ArgumentCaptor.forClass(String.class);
             ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
 
-            then(organizationRegistrationProcessRepository).should().save(any());
+            then(organizationRegistrationProcessRepository).should(times(2)).save(any());
+
             then(organizationRepository).should().save(any());
-            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
-            then(userProfileRepository).should().save(any());
             then(organizationRepository).should().delete(any());
-            then(organizationRegistrationProcessRepository).should().delete(any(OrganizationRegistrationProcess.class));
+
+            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
+
+            then(userProfileRepository).should().save(any());
+
             then(sagaCompensationActionService).should().authServerCredentialsRollback(authUserIdCaptor.capture(), emailCaptor.capture(), any());
 
             assertThat(authUserIdCaptor.getValue()).isEqualTo(USER_ID);
@@ -168,11 +172,13 @@ class OrganizationRegistrationProcessServiceTest {
                     .isInstanceOf(RuntimeException.class);
 
             // then
-            then(organizationRegistrationProcessRepository).should().save(any());
+            then(organizationRegistrationProcessRepository).should(times(2)).save(any());
+
             then(organizationRepository).should().save(any());
-            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
             then(organizationRepository).should().delete(any());
-            then(organizationRegistrationProcessRepository).should().delete(any(OrganizationRegistrationProcess.class));
+
+            then(authServerGrpcClient).should().authServerNewOrganizationUserRegistration(any(), any());
+
             then(userProfileRepository).shouldHaveNoInteractions();
             then(sagaCompensationActionService).shouldHaveNoInteractions();
         }

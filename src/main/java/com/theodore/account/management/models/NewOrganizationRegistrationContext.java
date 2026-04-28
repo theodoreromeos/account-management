@@ -12,9 +12,6 @@ public class NewOrganizationRegistrationContext {
     private String tempPassword;
     private Organization organization;
 
-    public NewOrganizationRegistrationContext() {
-    }
-
     public String getAuthUserId() {
         return authUserId;
     }

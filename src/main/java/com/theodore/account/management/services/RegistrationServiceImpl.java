@@ -96,7 +96,6 @@ public class RegistrationServiceImpl implements RegistrationService {
         var sagaOrchestrator = new SagaOrchestrator();
 
         String userEmail = email != null ? email : "unknown";
-        //simulateLag();
 
         sagaOrchestrator
                 .step(CREATE_AUTH_USER_STEP,
@@ -306,21 +305,12 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     private String buildLink(String path, String token) {
-        return String.format("%s/%s?token=%s", baseUrl(), path, token);
+        return String.format("%s/%s?token=%s", appUrl, path, token);
     }
 
     private Organization findByRegistrationNumber(String registrationNumber) {
         return organizationRepository.findByRegistrationNumberIgnoreCase(registrationNumber)
                 .orElseThrow(() -> new NotFoundException("Organization not found"));
-    }
-
-    //testing slow service
-    private void simulateLag() {
-        try {
-            Thread.sleep(3100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
 }
