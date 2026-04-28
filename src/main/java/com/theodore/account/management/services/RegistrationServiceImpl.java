@@ -25,6 +25,7 @@ import com.theodore.queue.common.emails.EmailDto;
 import com.theodore.queue.common.services.MessagingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,6 +34,9 @@ import java.util.List;
 public class RegistrationServiceImpl implements RegistrationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationServiceImpl.class);
+
+    @Value("${app.base-url}")
+    private String appUrl;
 
     private static final String USER_NOT_FOUND = "User not found";
     private static final String SUBJECT_REG_CONFIRM = "User Registration Confirmation";
@@ -127,7 +131,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                         () -> {
                             // 3) Send email
                             var token = emailTokenService.createSimpleUserToken(context.getSavedProfile());
-                            var link = String.format("%s/simple?token=%s", baseUrl(), token);
+                            var link = String.format("%s/simple?token=%s", appUrl, token);
                             var confirmationEmail = new EmailDto(List.of(userEmail), SUBJECT_REG_CONFIRM, link);
                             messagingService.sendToEmailService(confirmationEmail);
                         },
@@ -223,7 +227,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                     context.getSavedProfile().getEmail(),
                                     AccountConfirmedBy.USER
                             );
-                            var link = String.format("%s/confirmation/org-user?token=%s", baseUrl(), emailToken);
+                            var link = String.format("%s/confirmation/org-user?token=%s", appUrl, emailToken);
                             var confirmationEmail = new EmailDto(List.of(userEmail), SUBJECT_REG_CONFIRM, link);
                             messagingService.sendToEmailService(confirmationEmail);
                         },
@@ -308,10 +312,6 @@ public class RegistrationServiceImpl implements RegistrationService {
     private Organization findByRegistrationNumber(String registrationNumber) {
         return organizationRepository.findByRegistrationNumberIgnoreCase(registrationNumber)
                 .orElseThrow(() -> new NotFoundException("Organization not found"));
-    }
-
-    private String baseUrl() {//todo remove it
-        return "http://localhost/account-management/confirmation";
     }
 
     //testing slow service
