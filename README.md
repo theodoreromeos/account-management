@@ -257,9 +257,9 @@ activated either through the Maven profile flags or by setting `spring.profiles.
 Activate a profile at build or run time:
 
 ```bash
-#build
 mvn spring-boot:run -Plocal
-#run
+#or
+mvn clean package -DskipTests
 java -jar target/account-management-1.0.0.jar --spring.profiles.active=staging
 ```
 
@@ -274,22 +274,6 @@ java -jar target/account-management-1.0.0.jar --spring.profiles.active=staging
 - **Redis**
 
 ---
-
-## Running the Service
-
-```bash
-#build
-mvn clean package -DskipTests
-
-#run
-java -jar target/account-management-*.jar
-```
-
-Or with Maven directly:
-
-```bash
-mvn spring-boot:run
-```
 
 ## Logging
 
@@ -317,20 +301,34 @@ registry before building.
 
 ---
 
-## Docker
+## Running the Service
 
-A unified Docker Compose setup is planned to orchestrate both the database
-and the service:
+### Full Stack
+
+All four microservices, databases, and infrastructure are managed from the
+[mobility-app](https://github.com/mobility-systems/mobility-app) repository:
 
 ```bash
-#coming soon: single command to start everything
+git clone https://github.com/mobility-systems/mobility-app.git
+cd mobility-app
 docker compose up -d
 ```
 
-> **Current state:** The provided `docker-compose.yml` starts only the PostgreSQL database.
-> Service containerization is in progress.
+### Standalone development
 
 > [!WARNING]
 > **Make sure all required infrastructure services (PostgreSQL, Redis, RabbitMQ)
 > are available before starting.**
 
+```bash
+#build
+mvn clean package -Plocal -DskipTests
+#run
+java -jar target/account-management-1.0.0.jar
+```
+
+Or with Maven directly:
+
+```bash
+mvn spring-boot:run
+```
