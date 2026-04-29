@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class LoggingAspect {
 
     @Value("${slow.threshold:2000}")
-    private long SLOW_THRESHOLD_MS;
+    private long slowThresholdMs;
 
     @Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
     public void controllerLayer() {
@@ -56,7 +56,7 @@ public class LoggingAspect {
             return joinPoint.proceed();
         } finally {
             long duration = System.currentTimeMillis() - startTime;
-            if (duration > SLOW_THRESHOLD_MS) {
+            if (duration > slowThresholdMs) {
                 logger.warn("{}.{}() took {}ms [SLOW]", className, methodName, duration);
             }
         }

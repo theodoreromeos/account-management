@@ -14,13 +14,13 @@ import com.theodore.account.management.repositories.OrganizationUserRegistration
 import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.account.management.services.AuthServerGrpcClient;
 import com.theodore.account.management.services.EmailTokenService;
-import com.theodore.account.management.services.MessagingService;
 import com.theodore.account.management.services.SagaCompensationActionService;
 import com.theodore.account.management.utils.AccountManagementTestConfigs;
 import com.theodore.account.management.utils.AccountManagementTestUtils;
 import com.theodore.account.management.utils.TestData;
 import com.theodore.infrastructure.common.entities.enums.RoleType;
 import com.theodore.queue.common.emails.EmailDto;
+import com.theodore.queue.common.services.MessagingService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
