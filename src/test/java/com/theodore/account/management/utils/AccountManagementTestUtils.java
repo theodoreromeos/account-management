@@ -13,11 +13,11 @@ public class AccountManagementTestUtils {
     }
 
     public static String generateUlId() {
-        String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        String allCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(26);
         for (int i = 0; i < 26; i++) {
-            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
+            sb.append(allCharacters.charAt(random.nextInt(allCharacters.length())));
         }
         return sb.toString();
     }

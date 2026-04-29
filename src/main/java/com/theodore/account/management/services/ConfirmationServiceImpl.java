@@ -23,6 +23,7 @@ import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ import java.util.List;
 public class ConfirmationServiceImpl implements ConfirmationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfirmationServiceImpl.class);
+
+    @Value("${app.base-url}")
+    private String appUrl;
 
     private static final String EMAIL = "email";
 
@@ -110,7 +114,7 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         var adminInfoList = authServerGrpcClient
                 .getOrganizationAdminInfoFromAuthServer(registrationRequest.getOrganizationRegistrationNumber());
 
-        var emailList = new ArrayList<EmailDto>();
+        var emailList = new ArrayList<String>();
 
         String emailToken = emailTokenService.createOrganizationUserToken(user.getOrganization(),
                 user.getId(),
@@ -118,12 +122,11 @@ public class ConfirmationServiceImpl implements ConfirmationService {
                 AccountConfirmedBy.ORGANIZATION);
 
         for (OrgAdminInfoResponseDto adminInfo : adminInfoList) {
-            String link = String.format("%s/confirmation/org-user/admn?token=%s", baseUrl(), emailToken);
-            //send to email service for the organization to approve
-            LOGGER.info("SENDING EMAIL TO : {}", adminInfo.email());//todo remove it later
-            emailList.add(new EmailDto(List.of(adminInfo.email()), "User Registration Confirmation", link));
+            emailList.add(adminInfo.email());
         }
-        //messagingService.sendToEmailService(emailList);//todo
+        String link = String.format("%s/confirmation/org-user/admn?token=%s", appUrl, emailToken);
+        //send to email service for the organization to approve
+        messagingService.sendToEmailService(new EmailDto(emailList, "User Registration Confirmation", link));
         markTokenAsUsed(verificationToken);
     }
 
@@ -156,13 +159,15 @@ public class ConfirmationServiceImpl implements ConfirmationService {
         //send to auth server that user is authenticated
         var response = authServerGrpcClient.authServerNewUserConfirmation(userId);
 
+        String emailSubject = "Organization User Registration Progress";
+
         if (ConfirmationStatus.CONFIRMED.equals(response.getConfirmationStatus())) {
             LOGGER.info("EMAIL {} CONFIRMED", email);
             markTokenAsUsed(verificationToken);
-            // send successful confirmation email - rabbitmq to email service
+            // send successful confirmation email
+            messagingService.sendToEmailService(new EmailDto(List.of(email), emailSubject, "Organization User Registration Completed Successfully"));
         } else {
             LOGGER.info("EMAIL {} CONFIRMATION FAILED", email);
-            // todo:throw exception?
         }
     }
 
@@ -251,10 +256,6 @@ public class ConfirmationServiceImpl implements ConfirmationService {
 
     private UserProfile findUserProfileById(String userId) {
         return userProfileRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
-    }
-
-    private String baseUrl() {//todo remove it
-        return "http://localhost";
     }
 
 }
