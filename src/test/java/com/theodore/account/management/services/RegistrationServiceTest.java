@@ -15,6 +15,7 @@ import com.theodore.account.management.repositories.OrganizationUserRegistration
 import com.theodore.account.management.repositories.UserProfileRepository;
 import com.theodore.infrastructure.common.entities.enums.Country;
 import com.theodore.infrastructure.common.exceptions.NotFoundException;
+import com.theodore.queue.common.services.MessagingService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -147,7 +148,7 @@ class RegistrationServiceTest {
     @Nested
     class RegisterNewOrganizationUser {
 
-        private final Organization ORGANIZATION = createMockOrganization();
+        private final Organization organization = createMockOrganization();
 
         @DisplayName("registerNewOrganizationUser: User already exists then return dto (negative scenario)")
         @Test
@@ -209,7 +210,7 @@ class RegistrationServiceTest {
             savedProfile.setSurname(USER_SURNAME);
 
             when(userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(USER_EMAIL, USER_PHONE)).thenReturn(false);
-            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(Optional.of(ORGANIZATION));
+            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(Optional.of(organization));
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileRepository.save(any())).thenReturn(savedProfile);
             when(emailTokenService.createOrganizationUserToken(any(), any(), any(), any())).thenReturn(TOKEN);
@@ -237,7 +238,7 @@ class RegistrationServiceTest {
             var dto = new CreateNewOrganizationUserRequestDto(USER_EMAIL, USER_PHONE, USER_NAME, USER_SURNAME, USER_PASSWORD, ORG_REG_NUMBER);
 
             when(userProfileRepository.existsByEmailAndMobileNumberAllIgnoreCase(USER_EMAIL, USER_PHONE)).thenReturn(false);
-            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(Optional.of(ORGANIZATION));
+            when(organizationRepository.findByRegistrationNumberIgnoreCase(ORG_REG_NUMBER)).thenReturn(Optional.of(organization));
             when(authServerGrpcClient.authServerNewOrganizationUserRegistration(any(), any())).thenReturn(AUTH_USER);
             when(userProfileRepository.save(any())).thenThrow(new RuntimeException("I did my best but it was not enough i guess"));
 
@@ -252,10 +253,10 @@ class RegistrationServiceTest {
         }
 
         private Organization createMockOrganization() {
-            Organization organization = new Organization();
-            organization.setRegistrationNumber(ORG_REG_NUMBER);
-            organization.setId("test-org-id");
-            return organization;
+            Organization org = new Organization();
+            org.setRegistrationNumber(ORG_REG_NUMBER);
+            org.setId("test-org-id");
+            return org;
         }
 
     }
